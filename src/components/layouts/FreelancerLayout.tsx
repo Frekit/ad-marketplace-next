@@ -100,11 +100,11 @@ export default function FreelancerLayout({
                             Panel de control
                         </Link>
                         <Link
-                            href="/inbox"
-                            className={`flex items-center gap-3 px-4 py-3 rounded-lg ${isActive('/inbox') ? 'bg-gray-50 text-gray-900 font-medium' : 'hover:bg-gray-50 text-gray-600'}`}
+                            href="/freelancer/messages"
+                            className={`flex items-center gap-3 px-4 py-3 rounded-lg ${isActive('/freelancer/messages') ? 'bg-gray-50 text-gray-900 font-medium' : 'hover:bg-gray-50 text-gray-600'}`}
                         >
                             <MessageSquare className="h-5 w-5" />
-                            Bandeja de entrada
+                            Mensajes
                         </Link>
                         <Link
                             href="/freelancer/proposals"
