@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { stripe } from '@/lib/stripe';
+import { getStripeClient } from '@/lib/stripe';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-// Initialise Supabase client safely – if env vars are missing we log a warning and continue without DB writes
-let supabase: SupabaseClient<any, "public"> | null = null;
-if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL,
-        process.env.SUPABASE_SERVICE_ROLE_KEY
-    );
-} else {
+// Lazy initialization functions
+function getSupabaseClient(): SupabaseClient<any, "public"> | null {
+    if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        return createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL,
+            process.env.SUPABASE_SERVICE_ROLE_KEY
+        );
+    }
     console.warn('⚠️ Supabase env vars missing – webhook will run without persisting data');
+    return null;
 }
 
 export async function POST(req: NextRequest) {
@@ -20,6 +21,7 @@ export async function POST(req: NextRequest) {
 
     console.log('🔔 Webhook received – body length:', body.length);
 
+    const stripe = getStripeClient();
     let event: any;
     try {
         event = stripe.webhooks.constructEvent(
@@ -35,6 +37,7 @@ export async function POST(req: NextRequest) {
 
     // Process the event – wrap in try/catch to capture unexpected errors
     try {
+        const supabase = getSupabaseClient();
         if (!supabase) {
             console.warn('Supabase client not available – skipping DB writes');
             return NextResponse.json({ received: true });

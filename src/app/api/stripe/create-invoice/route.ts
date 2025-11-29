@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { stripe } from '@/lib/stripe';
+import { getStripeClient } from '@/lib/stripe';
 
 export async function POST(req: NextRequest) {
     try {
@@ -38,6 +38,7 @@ export async function POST(req: NextRequest) {
         }
 
         // 1. Find or Create Customer
+        const stripe = getStripeClient();
         const customers = await stripe.customers.list({
             email: session.user.email!,
             limit: 1,

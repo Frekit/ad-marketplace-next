@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Stripe from 'stripe';
 import { auth } from '@/auth';
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    typescript: true,
-});
+import { getStripeClient } from '@/lib/stripe';
 
 export async function POST(req: NextRequest) {
     try {
@@ -27,6 +23,7 @@ export async function POST(req: NextRequest) {
         }
 
         // Void the invoice in Stripe
+        const stripe = getStripeClient();
         const voidedInvoice = await stripe.invoices.voidInvoice(invoiceId);
 
         return NextResponse.json({
