@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { MapPin, Info } from "lucide-react"
 import { useRouter } from "next/navigation"
@@ -13,7 +13,7 @@ export default function ProfilePicturePage() {
     const router = useRouter()
     const [userId, setUserId] = useState<string>("")
     const [loading, setLoading] = useState(true)
-    const supabase = createClient()
+    const supabase = useMemo(() => createClient(), [])
 
     useEffect(() => {
         async function getUser() {
