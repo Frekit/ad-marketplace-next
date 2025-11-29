@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { createClient } from '@/lib/supabase';
+import { notifyUser, notificationTemplates } from '@/lib/notifications';
 
 export async function POST(
     req: NextRequest,
@@ -56,7 +57,28 @@ export async function POST(
             throw updateError;
         }
 
-        // TODO: Send notification to freelancer that invoice was approved
+        // Get freelancer email for notification
+        const { data: freelancer, error: freelancerError } = await supabase
+            .from('users')
+            .select('id, email')
+            .eq('id', invoice.freelancer_id)
+            .single();
+
+        if (freelancer && freelancer.email) {
+            const template = notificationTemplates.INVOICE_APPROVED(
+                invoice.invoice_number || `#${invoiceId}`,
+                invoice.total_amount
+            );
+
+            await notifyUser(
+                freelancer.id,
+                freelancer.email,
+                template.type,
+                template.title,
+                template.message,
+                { invoiceId, amount: invoice.total_amount }
+            );
+        }
 
         return NextResponse.json({
             message: 'Invoice approved successfully',

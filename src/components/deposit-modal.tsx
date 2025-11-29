@@ -23,16 +23,37 @@ export function DepositModal() {
     const [loading, setLoading] = useState(false);
 
     const handleDeposit = async () => {
+        if (!amount || parseFloat(amount) < 10) {
+            alert("Minimum deposit is €10");
+            return;
+        }
+
         setLoading(true);
 
-        // TODO: Integrate with Stripe
-        // For now, just simulate a delay
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        try {
+            const res = await fetch("/api/stripe/create-checkout", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    amount: parseFloat(amount),
+                }),
+            });
 
-        console.log("Depositing:", amount);
-        setLoading(false);
-        setOpen(false);
-        setAmount("");
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.error || "Failed to create checkout session");
+            }
+
+            // Redirect to Stripe Checkout
+            if (data.url) {
+                window.location.href = data.url;
+            }
+        } catch (err: any) {
+            alert(err.message);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const selectPresetAmount = (preset: number) => {
