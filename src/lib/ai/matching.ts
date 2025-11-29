@@ -11,9 +11,16 @@ import {
     FreelancerData
 } from './embeddings';
 
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-});
+/**
+ * Get OpenAI client instance lazily
+ */
+function getOpenAIClient() {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+        throw new Error('OPENAI_API_KEY is not configured');
+    }
+    return new OpenAI({ apiKey });
+}
 
 export interface MatchResult {
     freelancer: any;
@@ -195,6 +202,7 @@ async function generateMatchExplanation(
     score: number,
     breakdown: any
 ): Promise<string> {
+    const openai = getOpenAIClient();
     const prompt = `You are an AI assistant helping match freelancers with projects. 
 
 Project: "${project.title}"
