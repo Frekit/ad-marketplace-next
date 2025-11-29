@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase"
 import { Upload, X, Loader2, Check } from "lucide-react"
@@ -22,7 +22,7 @@ export default function ProfilePictureUpload({
     const [error, setError] = useState("")
     const [success, setSuccess] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
-    const supabase = createClient()
+    const supabase = useMemo(() => createClient(), [])
 
     const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
