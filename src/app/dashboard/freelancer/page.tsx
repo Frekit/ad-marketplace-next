@@ -79,6 +79,9 @@ export default function FreelancerDashboard() {
                 if (res.ok) {
                     const data = await res.json()
                     setProposals(data.proposals || [])
+                } else {
+                    const error = await res.json()
+                    console.error("Error fetching proposals:", res.status, error)
                 }
             } catch (error) {
                 console.error("Error fetching proposals:", error)
