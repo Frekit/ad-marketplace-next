@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
@@ -54,7 +54,9 @@ export default function InboxPage() {
     const [sending, setSending] = useState(false)
     const [currentUserId, setCurrentUserId] = useState<string>("")
     const messagesEndRef = useRef<HTMLDivElement>(null)
-    const supabase = createClient()
+
+    // Lazy initialize Supabase client to avoid pre-rendering errors
+    const supabase = useMemo(() => createClient(), [])
 
     useEffect(() => {
         loadConversations()
