@@ -90,7 +90,10 @@ export default function FreelancerDashboard() {
                             <h1 className="text-3xl font-bold text-gray-900">Bienvenido de nuevo {userName}</h1>
                             <p className="text-gray-600 mt-1">Aquí está un resumen de tu actividad reciente</p>
                         </div>
-                        <Button className="bg-[#FF5C5C] hover:bg-[#FF5C5C]/90 text-white">
+                        <Button
+                            onClick={() => window.location.href = '/freelancer/profile-settings'}
+                            className="bg-[#FF5C5C] hover:bg-[#FF5C5C]/90 text-white"
+                        >
                             Completar mi perfil
                         </Button>
                     </div>
