@@ -51,49 +51,18 @@ export default function ContractDetailPage() {
 
     const fetchContract = async () => {
         try {
-            // TODO: Replace with actual API call
-            // Mock data for now
-            setContract({
-                id: contractId,
-                project_id: "proj-1",
-                freelancer_id: "freelancer-1",
-                client_id: "client-1",
-                total_amount: 400,
-                paid_amount: 150,
-                status: "active",
-                milestones: [
-                    {
-                        id: 1,
-                        name: "Design Phase",
-                        amount: 150,
-                        due_date: "2024-12-01",
-                        description: "Complete UI/UX design",
-                        status: "approved",
-                        completed_at: "2024-11-20T10:00:00Z",
-                        approved_at: "2024-11-21T14:00:00Z",
-                    },
-                    {
-                        id: 2,
-                        name: "Development",
-                        amount: 200,
-                        due_date: "2024-12-15",
-                        description: "Implement features",
-                        status: "completed",
-                        completed_at: "2024-11-24T16:00:00Z",
-                    },
-                    {
-                        id: 3,
-                        name: "Testing",
-                        amount: 50,
-                        due_date: "2024-12-20",
-                        description: "QA and bug fixes",
-                        status: "pending",
-                    },
-                ],
-            });
-            setLoading(false);
+            const res = await fetch(`/api/contracts/${contractId}`);
+            if (res.ok) {
+                const data = await res.json();
+                setContract(data);
+            } else {
+                setError("No se pudo cargar el contrato");
+                setContract(null);
+            }
         } catch (err: any) {
             setError(err.message);
+            setContract(null);
+        } finally {
             setLoading(false);
         }
     };
