@@ -6,13 +6,9 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase";
-import Stripe from "stripe";
+import { getStripeClient } from "@/lib/stripe";
 import DepositForm from "./DepositForm";
 import InvoiceList from "./InvoiceList";
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    typescript: true,
-});
 
 export default async function WalletPage() {
     const session = await auth();
@@ -39,6 +35,7 @@ export default async function WalletPage() {
         .order("created_at", { ascending: false });
 
     // Fetch invoice details from Stripe
+    const stripe = getStripeClient();
     const invoices = [];
     if (transactions && transactions.length > 0) {
         const invoicePromises = transactions
