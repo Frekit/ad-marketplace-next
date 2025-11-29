@@ -134,6 +134,13 @@ export default function FreelancerLayout({
                             <div className="h-5 w-5">📄</div>
                             Verificación
                         </Link>
+                        <Link
+                            href="/freelancer/reviews"
+                            className={`flex items-center gap-3 px-4 py-3 rounded-lg ${isActive('/freelancer/reviews') ? 'bg-gray-50 text-gray-900 font-medium' : 'hover:bg-gray-50 text-gray-600'}`}
+                        >
+                            <TrendingUp className="h-5 w-5" />
+                            Reseñas y Calificaciones
+                        </Link>
 
                         <div className="pt-4 pb-2">
                             <div className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Mi cuenta</div>
