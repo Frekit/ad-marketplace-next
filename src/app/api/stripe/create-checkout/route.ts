@@ -1,8 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { getStripeClient } from '@/lib/stripe';
+import { applyRateLimit, addRateLimitHeaders, logRequest } from '@/lib/api-middleware';
+import { rateLimitConfig } from '@/lib/rate-limit';
 
 export async function POST(req: NextRequest) {
+    const startTime = Date.now();
+
+    // Apply rate limiting (10 requests per minute for payment endpoints)
+    const rateLimit = applyRateLimit(req, '/api/stripe/create-checkout', rateLimitConfig.payment);
+    if (rateLimit instanceof NextResponse) {
+        logRequest('POST', '/api/stripe/create-checkout', 429, Date.now() - startTime, req);
+        return rateLimit;
+    }
+
     try {
         const session = await auth();
 
@@ -51,13 +62,18 @@ export async function POST(req: NextRequest) {
             customer_email: session.user.email!,
         });
 
-        return NextResponse.json({
+        const response = NextResponse.json({
             sessionId: checkoutSession.id,
             url: checkoutSession.url
         });
 
+        const responseWithHeaders = addRateLimitHeaders(response, rateLimit.headers);
+        logRequest('POST', '/api/stripe/create-checkout', 200, Date.now() - startTime, req, session?.user?.id);
+        return responseWithHeaders;
+
     } catch (error) {
         console.error('Error creating checkout session:', error);
+        logRequest('POST', '/api/stripe/create-checkout', 500, Date.now() - startTime, req);
         return NextResponse.json(
             { error: 'Failed to create checkout session' },
             { status: 500 }

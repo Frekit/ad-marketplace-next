@@ -1,10 +1,21 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { hash } from "bcryptjs"
 import { createClient } from "@/lib/supabase"
+import { applyRateLimit, addRateLimitHeaders, logRequest } from "@/lib/api-middleware"
+import { rateLimitConfig } from "@/lib/rate-limit"
 
 const BLOCKED_DOMAINS = ["gmail.com", "yahoo.com", "hotmail.com", "outlook.com", "icloud.com"]
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+    const startTime = Date.now();
+
+    // Apply rate limiting (5 attempts per 15 minutes)
+    const rateLimit = applyRateLimit(request, '/api/auth/register', rateLimitConfig.auth);
+    if (rateLimit instanceof NextResponse) {
+        logRequest('POST', '/api/auth/register', 429, Date.now() - startTime, request);
+        return rateLimit;
+    }
+
     try {
         const body = await request.json()
         const { email, password, firstName, lastName, role, companyName } = body
@@ -76,7 +87,7 @@ export async function POST(request: Request) {
             )
         }
 
-        return NextResponse.json(
+        const response = NextResponse.json(
             {
                 message: "User created successfully",
                 user: {
@@ -86,9 +97,14 @@ export async function POST(request: Request) {
                 }
             },
             { status: 201 }
-        )
+        );
+
+        const responseWithHeaders = addRateLimitHeaders(response, rateLimit.headers);
+        logRequest('POST', '/api/auth/register', 201, Date.now() - startTime, request);
+        return responseWithHeaders;
     } catch (error) {
         console.error("Registration error:", error)
+        logRequest('POST', '/api/auth/register', 500, Date.now() - startTime, request);
         return NextResponse.json(
             { error: "Internal server error" },
             { status: 500 }

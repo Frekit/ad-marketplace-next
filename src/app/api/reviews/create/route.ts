@@ -4,8 +4,17 @@ import { createClient } from '@/lib/supabase';
 import { notifyUser } from '@/lib/notifications';
 import { validateReviewData, ValidationResult } from '@/lib/validation';
 import { ApiResponse, ApiErrors } from '@/lib/api-error';
+import { applyRateLimit, addRateLimitHeaders, logRequest } from '@/lib/api-middleware';
+import { rateLimitConfig } from '@/lib/rate-limit';
 
 export async function POST(req: NextRequest) {
+    const startTime = Date.now();
+
+    // Apply rate limiting
+    const rateLimit = applyRateLimit(req, '/api/reviews/create', rateLimitConfig.api);
+    if (rateLimit instanceof NextResponse) {
+        return rateLimit;
+    }
     try {
         const session = await auth();
 
@@ -76,13 +85,26 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        return NextResponse.json({
+        const response = NextResponse.json({
             message: 'Review submitted successfully',
             reviewId: review.id,
         });
 
+        // Add rate limit headers
+        const responseWithHeaders = addRateLimitHeaders(response, rateLimit.headers);
+
+        // Log successful request
+        logRequest('POST', '/api/reviews/create', 200, Date.now() - startTime, req, session?.user?.id);
+
+        return responseWithHeaders;
+
     } catch (error: any) {
         console.error('Error creating review:', error);
-        return ApiResponse.error(error);
+        const errorResponse = ApiResponse.error(error);
+
+        // Log error request
+        logRequest('POST', '/api/reviews/create', errorResponse.status || 500, Date.now() - startTime, req);
+
+        return errorResponse;
     }
 }

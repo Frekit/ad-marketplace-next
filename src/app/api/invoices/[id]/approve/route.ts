@@ -2,11 +2,22 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { createClient } from '@/lib/supabase';
 import { notifyUser, notificationTemplates } from '@/lib/notifications';
+import { applyRateLimit, addRateLimitHeaders, logRequest } from '@/lib/api-middleware';
+import { rateLimitConfig } from '@/lib/rate-limit';
 
 export async function POST(
     req: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
+    const startTime = Date.now();
+
+    // Apply rate limiting (100 requests per minute for general API endpoints)
+    const rateLimit = applyRateLimit(req, '/api/invoices/approve', rateLimitConfig.api);
+    if (rateLimit instanceof NextResponse) {
+        logRequest('POST', '/api/invoices/approve', 429, Date.now() - startTime, req);
+        return rateLimit;
+    }
+
     try {
         const session = await auth();
 
@@ -80,14 +91,19 @@ export async function POST(
             );
         }
 
-        return NextResponse.json({
+        const response = NextResponse.json({
             message: 'Invoice approved successfully',
             invoice_id: invoiceId,
             approved_at: now,
         });
 
+        const responseWithHeaders = addRateLimitHeaders(response, rateLimit.headers);
+        logRequest('POST', '/api/invoices/approve', 200, Date.now() - startTime, req, session?.user?.id);
+        return responseWithHeaders;
+
     } catch (error: any) {
         console.error('Error approving invoice:', error);
+        logRequest('POST', '/api/invoices/approve', 500, Date.now() - startTime, req);
         return NextResponse.json(
             { error: error.message || 'Failed to approve invoice' },
             { status: 500 }
