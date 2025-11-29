@@ -301,8 +301,24 @@ async function acceptOffer(projectId: string, offerId: string, clientId: string)
         throw rpcError;
     }
 
-    await supabase.from('freelancer_offers').update({ status: 'accepted' }).eq('id', offerId);
-    await supabase.from('projects').update({ status: 'active', allocated_budget: offer.total_amount, freelancer_id: offer.freelancer_id, milestones: offer.milestones }).eq('id', projectId);
+    const { error: offerUpdateError } = await supabase.from('freelancer_offers').update({ status: 'accepted' }).eq('id', offerId);
+    if (offerUpdateError) {
+        console.error('❌ Failed to update offer status:', offerUpdateError);
+        throw offerUpdateError;
+    }
+
+    const { error: projectUpdateError } = await supabase.from('projects').update({
+        status: 'in_progress',
+        allocated_budget: offer.total_amount,
+        freelancer_id: offer.freelancer_id,
+        milestones: offer.milestones
+    }).eq('id', projectId);
+
+    if (projectUpdateError) {
+        console.error('❌ Failed to update project:', projectUpdateError);
+        throw projectUpdateError;
+    }
+    console.log('   ✅ Project updated to in_progress');
 }
 
 async function completeMilestone(projectId: string, milestoneIndex: number, freelancerId: string) {
@@ -340,11 +356,13 @@ async function approveInvoice(invoiceId: string) {
 async function approveMilestone(projectId: string, milestoneIndex: number, clientId: string) {
     const { data: project } = await supabase.from('projects').select('*').eq('id', projectId).single();
     if (!project) throw new Error('Project not found');
-    const milestone = project.milestones[milestoneIndex];
-    // Use direct DB operations instead of RPC to avoid issues
-    console.log('   🔍 Processing milestone payment (Direct DB)...');
-    console.log(`      Project ID: ${projectId}`);
+
+    console.log(`   🔍 Debug Project State:`);
+    console.log(`      ID: ${project.id}`);
+    console.log(`      Status: ${project.status}`);
     console.log(`      Freelancer ID: ${project.freelancer_id}`);
+
+    const milestone = project.milestones[milestoneIndex];
 
     // 1. Deduct from client locked balance
     const { data: clientWallet } = await supabase.from('client_wallets').select('locked_balance').eq('client_id', clientId).single();

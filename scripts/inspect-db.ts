@@ -11,15 +11,31 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 async function inspect() {
     console.log('🔍 Inspecting client_wallets table...');
 
-    const { error } = await supabase
-        .from('client_wallets')
-        .insert({ client_id: '00000000-0000-0000-0000-000000000000' }) // Dummy insert to see constraints
-        .select();
+    const { data, error } = await supabase
+        .rpc('get_check_constraints', { table_name: 'projects' }); // This won't work without a function
 
-    if (error) {
-        console.log('❌ Insert Error:', error.message);
-        console.log('   Details:', error.details);
-        console.log('   Hint:', error.hint);
+    // Alternative: Try to insert invalid value and see error detail? We already did that.
+    // Let's try to query pg_catalog if we can via rpc? No.
+
+    // Let's try to just guess 'in_progress' instead of 'active'.
+    // Or 'open'?
+
+    // Actually, let's try to read the constraint definition from information_schema using a raw query if possible?
+    // Supabase JS doesn't support raw queries.
+
+    // I'll try to insert with 'in_progress' and see if it works.
+    const { error: insertError } = await supabase
+        .from('projects')
+        .insert({
+            client_id: '00000000-0000-0000-0000-000000000000',
+            title: 'Test',
+            status: 'in_progress'
+        });
+
+    if (insertError) {
+        console.log('❌ Insert Error (in_progress):', insertError.message);
+    } else {
+        console.log('✅ Insert Success (in_progress)');
     }
 }
 

@@ -1,6 +1,6 @@
 {
   "code": "23514",
-  "details": "Failing row contains (7fee0023-7c64-4583-9d0e-5e1f297abeba, 31328c99-9b4a-468d-b3f5-908ffeba9abb, escrow_lock, 400.00, completed, Funds locked in escrow for project, null, {\"project_id\": \"0bb89676-7cce-4363-ab68-16a2ed38d577\"}, 2025-11-29 00:40:21.067687, 2025-11-29 00:40:21.067687).",
+  "details": "Failing row contains (8dd55027-caa3-4525-88ab-73a3b75f4d3f, 31328c99-9b4a-468d-b3f5-908ffeba9abb, Test Project - E2E Workflow, End-to-end test project, {Testing,QA}, 400.00, active, dd806503-6cec-48a1-9c90-26c97d840831, 2025-11-29 11:03:40.397009, 2025-11-29 11:03:40.397009, [{\"name\": \"Milestone 1\", \"amount\": 200, \"description\": \"First de..., 0.00).",
   "hint": null,
-  "message": "new row for relation \"transactions\" violates check constraint \"transactions_type_check\""
+  "message": "new row for relation \"projects\" violates check constraint \"projects_status_check\""
 }
