@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { createClient } from '@/lib/supabase';
 import { notifyUser, notificationTemplates } from '@/lib/notifications';
+import { ApiResponse, ApiErrors } from '@/lib/api-error';
 
 export async function POST(
     req: NextRequest,
@@ -60,16 +61,15 @@ export async function POST(
         }
 
         // Check if invitation already exists
-        const { data: existing } = await supabase
+        const { data: existing, error: existingError } = await supabase
             .from('project_invitations')
             .select('id, status')
             .eq('project_id', projectId)
-            .eq('freelancer_id', freelancerId)
-            .single();
+            .eq('freelancer_id', freelancerId);
 
-        if (existing) {
+        if (existing && existing.length > 0) {
             return NextResponse.json(
-                { error: `An invitation already exists with status: ${existing.status}` },
+                { error: `An invitation already exists with status: ${existing[0].status}` },
                 { status: 400 }
             );
         }
@@ -121,9 +121,6 @@ export async function POST(
         });
     } catch (error: any) {
         console.error('Error creating invitation:', error);
-        return NextResponse.json(
-            { error: error.message || 'Failed to send invitation' },
-            { status: 500 }
-        );
+        return ApiResponse.error(error);
     }
 }
