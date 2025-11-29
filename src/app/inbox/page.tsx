@@ -10,6 +10,9 @@ import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Mail, MessageSquare, Send, Loader2 } from "lucide-react"
 
+// Disable pre-rendering to avoid Supabase initialization errors during build
+export const dynamic = 'force-dynamic'
+
 type Message = {
     id: string
     conversation_id: string
@@ -276,8 +279,8 @@ export default function InboxPage() {
                                         >
                                             <div
                                                 className={`max-w-[70%] rounded-lg px-4 py-2 ${isOwnMessage
-                                                        ? 'bg-[#FF5C5C] text-white'
-                                                        : 'bg-gray-200 text-gray-900'
+                                                    ? 'bg-[#FF5C5C] text-white'
+                                                    : 'bg-gray-200 text-gray-900'
                                                     }`}
                                             >
                                                 <p className="text-sm">{message.content}</p>
