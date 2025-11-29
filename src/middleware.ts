@@ -45,7 +45,9 @@ export function middleware(request: NextRequest) {
         process.env.NEXT_PUBLIC_APP_URL,
         'http://localhost:3000',
         'http://localhost:3001',
-    ];
+        // Add custom CORS origins from environment variable if provided
+        ...(process.env.CORS_ORIGINS?.split(',').map(o => o.trim()) || []),
+    ].filter(Boolean);
 
     if (origin && allowedOrigins.includes(origin)) {
         response.headers.set('Access-Control-Allow-Origin', origin);
@@ -56,7 +58,11 @@ export function middleware(request: NextRequest) {
         );
         response.headers.set(
             'Access-Control-Allow-Headers',
-            'Content-Type, Authorization, X-CSRF-Token'
+            'Content-Type, Authorization, X-CSRF-Token, X-RateLimit-Key'
+        );
+        response.headers.set(
+            'Access-Control-Max-Age',
+            '86400' // Cache preflight requests for 24 hours
         );
     }
 
