@@ -5,71 +5,25 @@ import Link from "next/link";
 import { Star, MapPin, Briefcase, Calendar, Award, MessageCircle } from "lucide-react";
 import { notFound } from "next/navigation";
 
-// Mock data - will be replaced with database queries
-const MOCK_FREELANCER = {
-    id: "user-1",
-    firstName: "Sarah",
-    lastName: "Johnson",
-    role: "Facebook Ads Specialist",
-    location: "New York, USA",
-    rating: 4.9,
-    reviewCount: 127,
-    hourlyRate: 85,
-    bio: "10+ years experience managing Facebook ad campaigns for e-commerce brands. Specialized in ROAS optimization and scaling. I help businesses achieve their advertising goals through data-driven strategies and creative excellence.",
-    skills: ["Facebook Ads", "Instagram Ads", "Social Media Marketing", "Analytics", "A/B Testing", "Conversion Optimization"],
-    experience: [
-        {
-            title: "Senior Facebook Ads Manager",
-            company: "Digital Marketing Agency",
-            period: "2020 - Present",
-            description: "Leading Facebook advertising campaigns for Fortune 500 clients"
-        },
-        {
-            title: "Social Media Strategist",
-            company: "E-commerce Startup",
-            period: "2017 - 2020",
-            description: "Grew social media presence from 0 to 500K followers"
-        }
-    ],
-    portfolio: [
-        {
-            id: "1",
-            title: "E-commerce Brand Campaign",
-            description: "Increased ROAS by 340% in 3 months",
-            image: "/placeholder-1.jpg",
-            tags: ["Facebook Ads", "E-commerce"]
-        },
-        {
-            id: "2",
-            title: "Lead Generation Campaign",
-            description: "Generated 10,000+ qualified leads",
-            image: "/placeholder-2.jpg",
-            tags: ["Lead Gen", "B2B"]
-        },
-        {
-            id: "3",
-            title: "Brand Awareness Campaign",
-            description: "Reached 5M+ people in target demographic",
-            image: "/placeholder-3.jpg",
-            tags: ["Brand Awareness", "Video Ads"]
-        },
-        {
-            id: "4",
-            title: "Retargeting Strategy",
-            description: "Reduced CPA by 60% through smart retargeting",
-            image: "/placeholder-4.jpg",
-            tags: ["Retargeting", "Optimization"]
-        }
-    ],
-    certifications: [
-        "Meta Blueprint Certified",
-        "Google Ads Certified",
-        "HubSpot Inbound Marketing"
-    ]
-};
+async function getFreelancer(id: string) {
+    try {
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+        const res = await fetch(`${baseUrl}/api/freelancers/search?id=${id}`, {
+            cache: 'no-store'
+        });
 
-export default function FreelancerProfilePage({ params }: { params: { id: string } }) {
-    const freelancer = MOCK_FREELANCER; // In real app, fetch by params.id
+        if (!res.ok) return null;
+
+        const data = await res.json();
+        return data.freelancers?.[0] || null;
+    } catch (error) {
+        console.error('Error fetching freelancer:', error);
+        return null;
+    }
+}
+
+export default async function FreelancerProfilePage({ params }: { params: { id: string } }) {
+    const freelancer = await getFreelancer(params.id);
 
     if (!freelancer) {
         notFound();
@@ -153,7 +107,7 @@ export default function FreelancerProfilePage({ params }: { params: { id: string
                         <div>
                             <h2 className="text-2xl font-bold mb-6">Portfolio</h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {freelancer.portfolio.map((project) => (
+                                {freelancer.portfolio?.map((project: any) => (
                                     <Card key={project.id} className="overflow-hidden hover:shadow-lg transition-shadow group cursor-pointer">
                                         <div className="aspect-video bg-gradient-to-br from-primary/20 to-accent/20 relative overflow-hidden">
                                             <div className="absolute inset-0 flex items-center justify-center text-6xl font-bold text-primary/10">
@@ -166,7 +120,7 @@ export default function FreelancerProfilePage({ params }: { params: { id: string
                                             </h3>
                                             <p className="text-sm text-muted-foreground mb-3">{project.description}</p>
                                             <div className="flex flex-wrap gap-2">
-                                                {project.tags.map((tag) => (
+                                                {project.tags?.map((tag: string) => (
                                                     <Badge key={tag} variant="secondary" className="text-xs">
                                                         {tag}
                                                     </Badge>
@@ -181,7 +135,7 @@ export default function FreelancerProfilePage({ params }: { params: { id: string
                         <div>
                             <h2 className="text-2xl font-bold mb-6">Experience</h2>
                             <div className="space-y-6">
-                                {freelancer.experience.map((exp, idx) => (
+                                {freelancer.experience?.map((exp: any, idx: number) => (
                                     <Card key={idx}>
                                         <CardContent className="p-6">
                                             <div className="flex items-start gap-4">
@@ -211,7 +165,7 @@ export default function FreelancerProfilePage({ params }: { params: { id: string
                             <CardContent className="p-6">
                                 <h3 className="font-semibold text-lg mb-4">Skills</h3>
                                 <div className="flex flex-wrap gap-2">
-                                    {freelancer.skills.map((skill) => (
+                                    {freelancer.skills?.map((skill: string) => (
                                         <Badge key={skill} variant="secondary">
                                             {skill}
                                         </Badge>
@@ -227,7 +181,7 @@ export default function FreelancerProfilePage({ params }: { params: { id: string
                                     Certifications
                                 </h3>
                                 <ul className="space-y-3">
-                                    {freelancer.certifications.map((cert, idx) => (
+                                    {freelancer.certifications?.map((cert: string, idx: number) => (
                                         <li key={idx} className="flex items-start gap-2">
                                             <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
                                             <span className="text-sm">{cert}</span>

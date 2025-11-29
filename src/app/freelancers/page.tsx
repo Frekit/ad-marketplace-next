@@ -12,35 +12,19 @@ import { Label } from "@/components/ui/label";
 import { Star, MapPin, Search, DollarSign, Plus, Briefcase, ArrowRight, Loader2 } from "lucide-react";
 import Link from "next/link";
 
-// TODO: Replace with actual API call
-const MOCK_FREELANCERS = [
-    {
-        id: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-        firstName: "Sarah",
-        lastName: "Johnson",
-        role: "Facebook Ads Specialist",
-        skills: ["Facebook Ads", "Instagram Ads", "Social Media Marketing"],
-        rating: 4.9,
-        reviewCount: 127,
-        hourlyRate: 85,
-        location: "New York, USA",
-        bio: "10+ years experience managing Facebook ad campaigns for e-commerce brands.",
-        availability: "available",
-    },
-    {
-        id: "550e8400-e29b-41d4-a716-446655440000",
-        firstName: "Michael",
-        lastName: "Chen",
-        role: "Google Ads Expert",
-        skills: ["Google Ads", "PPC", "SEM"],
-        rating: 5.0,
-        reviewCount: 89,
-        hourlyRate: 95,
-        location: "San Francisco, USA",
-        bio: "Certified Google Ads professional with proven track record.",
-        availability: "available",
-    },
-];
+type Freelancer = {
+    id: string;
+    firstName: string;
+    lastName: string;
+    role: string;
+    skills: string[];
+    rating: number;
+    reviewCount: number;
+    hourlyRate: number;
+    location: string;
+    bio: string;
+    availability: string;
+};
 
 type Project = {
     id: string;
@@ -51,8 +35,8 @@ type Project = {
 
 export default function FreelancersPage() {
     const [searchTerm, setSearchTerm] = useState("");
-    const [freelancers, setFreelancers] = useState(MOCK_FREELANCERS);
-    const [selectedFreelancer, setSelectedFreelancer] = useState<typeof MOCK_FREELANCERS[0] | null>(null);
+    const [freelancers, setFreelancers] = useState<Freelancer[]>([]);
+    const [selectedFreelancer, setSelectedFreelancer] = useState<Freelancer | null>(null);
     const [projects, setProjects] = useState<Project[]>([]);
     const [selectedProject, setSelectedProject] = useState<string>("");
     const [inviteMessage, setInviteMessage] = useState("");
@@ -60,6 +44,29 @@ export default function FreelancersPage() {
     const [loading, setLoading] = useState(false);
     const [loadingProjects, setLoadingProjects] = useState(false);
     const [sheetOpen, setSheetOpen] = useState(false);
+    const [loadingFreelancers, setLoadingFreelancers] = useState(true);
+
+    useEffect(() => {
+        const fetchFreelancers = async () => {
+            try {
+                const res = await fetch("/api/freelancers/search");
+                if (res.ok) {
+                    const data = await res.json();
+                    setFreelancers(data.freelancers || []);
+                } else {
+                    console.error("Failed to fetch freelancers");
+                    setFreelancers([]);
+                }
+            } catch (error) {
+                console.error("Error fetching freelancers:", error);
+                setFreelancers([]);
+            } finally {
+                setLoadingFreelancers(false);
+            }
+        };
+
+        fetchFreelancers();
+    }, []);
 
     const filteredFreelancers = freelancers.filter(f =>
         f.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -68,7 +75,7 @@ export default function FreelancersPage() {
         f.skills.some(s => s.toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
-    const handleInviteClick = async (freelancer: typeof MOCK_FREELANCERS[0]) => {
+    const handleInviteClick = async (freelancer: Freelancer) => {
         setSelectedFreelancer(freelancer);
         setSheetOpen(true);
         setLoadingProjects(true);
@@ -176,88 +183,92 @@ export default function FreelancersPage() {
                     </Card>
 
                     {/* Results */}
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                        {filteredFreelancers.map((freelancer) => (
-                            <Card key={freelancer.id} className="hover:shadow-lg transition-shadow">
-                                <CardHeader>
-                                    <div className="flex items-start justify-between">
-                                        <div>
-                                            <CardTitle className="text-lg">
-                                                {freelancer.firstName} {freelancer.lastName}
-                                            </CardTitle>
-                                            <p className="text-sm text-muted-foreground mt-1">
-                                                {freelancer.role}
-                                            </p>
-                                        </div>
-                                        <Badge className={getAvailabilityColor(freelancer.availability)}>
-                                            {getAvailabilityLabel(freelancer.availability)}
-                                        </Badge>
-                                    </div>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    {/* Rating */}
-                                    <div className="flex items-center gap-2">
-                                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                        <span className="font-semibold">{freelancer.rating}</span>
-                                        <span className="text-sm text-muted-foreground">
-                                            ({freelancer.reviewCount} reviews)
-                                        </span>
-                                    </div>
-
-                                    {/* Location */}
-                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                        <MapPin className="h-4 w-4" />
-                                        {freelancer.location}
-                                    </div>
-
-                                    {/* Hourly Rate */}
-                                    <div className="flex items-center gap-2">
-                                        <DollarSign className="h-4 w-4 text-[#FF5C5C]" />
-                                        <span className="font-semibold text-[#FF5C5C]">
-                                            €{freelancer.hourlyRate}/h
-                                        </span>
-                                    </div>
-
-                                    {/* Skills */}
-                                    <div className="flex flex-wrap gap-2">
-                                        {freelancer.skills.slice(0, 3).map((skill, idx) => (
-                                            <Badge key={idx} variant="outline" className="text-xs">
-                                                {skill}
-                                            </Badge>
-                                        ))}
-                                    </div>
-
-                                    {/* Bio */}
-                                    <p className="text-sm text-muted-foreground line-clamp-2">
-                                        {freelancer.bio}
-                                    </p>
-
-                                    {/* Actions */}
-                                    <div className="flex gap-2 pt-2">
-                                        <Link href={`/freelancers/${freelancer.id}`} className="flex-1">
-                                            <Button variant="outline" className="w-full" size="sm">
-                                                Ver Perfil
-                                            </Button>
-                                        </Link>
-                                        <Button
-                                            className="flex-1 bg-[#FF5C5C] hover:bg-[#FF5C5C]/90"
-                                            size="sm"
-                                            onClick={() => handleInviteClick(freelancer)}
-                                        >
-                                            Invitar
-                                        </Button>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
-
-                    {filteredFreelancers.length === 0 && (
+                    {loadingFreelancers ? (
+                        <div className="flex items-center justify-center py-12">
+                            <Loader2 className="h-8 w-8 animate-spin text-[#FF5C5C]" />
+                        </div>
+                    ) : filteredFreelancers.length === 0 ? (
                         <Card>
                             <CardContent className="py-12 text-center text-muted-foreground">
                                 <p>No se encontraron freelancers que coincidan con tu búsqueda.</p>
                             </CardContent>
                         </Card>
+                    ) : (
+                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                            {filteredFreelancers.map((freelancer) => (
+                                <Card key={freelancer.id} className="hover:shadow-lg transition-shadow">
+                                    <CardHeader>
+                                        <div className="flex items-start justify-between">
+                                            <div>
+                                                <CardTitle className="text-lg">
+                                                    {freelancer.firstName} {freelancer.lastName}
+                                                </CardTitle>
+                                                <p className="text-sm text-muted-foreground mt-1">
+                                                    {freelancer.role}
+                                                </p>
+                                            </div>
+                                            <Badge className={getAvailabilityColor(freelancer.availability)}>
+                                                {getAvailabilityLabel(freelancer.availability)}
+                                            </Badge>
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        {/* Rating */}
+                                        <div className="flex items-center gap-2">
+                                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                                            <span className="font-semibold">{freelancer.rating}</span>
+                                            <span className="text-sm text-muted-foreground">
+                                                ({freelancer.reviewCount} reviews)
+                                            </span>
+                                        </div>
+
+                                        {/* Location */}
+                                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                            <MapPin className="h-4 w-4" />
+                                            {freelancer.location}
+                                        </div>
+
+                                        {/* Hourly Rate */}
+                                        <div className="flex items-center gap-2">
+                                            <DollarSign className="h-4 w-4 text-[#FF5C5C]" />
+                                            <span className="font-semibold text-[#FF5C5C]">
+                                                €{freelancer.hourlyRate}/h
+                                            </span>
+                                        </div>
+
+                                        {/* Skills */}
+                                        <div className="flex flex-wrap gap-2">
+                                            {freelancer.skills.slice(0, 3).map((skill, idx) => (
+                                                <Badge key={idx} variant="outline" className="text-xs">
+                                                    {skill}
+                                                </Badge>
+                                            ))}
+                                        </div>
+
+                                        {/* Bio */}
+                                        <p className="text-sm text-muted-foreground line-clamp-2">
+                                            {freelancer.bio}
+                                        </p>
+
+                                        {/* Actions */}
+                                        <div className="flex gap-2 pt-2">
+                                            <Link href={`/freelancers/${freelancer.id}`} className="flex-1">
+                                                <Button variant="outline" className="w-full" size="sm">
+                                                    Ver Perfil
+                                                </Button>
+                                            </Link>
+                                            <Button
+                                                className="flex-1 bg-[#FF5C5C] hover:bg-[#FF5C5C]/90"
+                                                size="sm"
+                                                onClick={() => handleInviteClick(freelancer)}
+                                            >
+                                                Invitar
+                                            </Button>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
                     )}
                 </div>
             </div>
