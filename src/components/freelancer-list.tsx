@@ -1,10 +1,10 @@
 "use client"
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FreelancerCard } from "@/components/freelancer-card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Search, SlidersHorizontal, Loader2 } from "lucide-react";
 
 interface Freelancer {
     id: string;
@@ -19,8 +19,28 @@ interface Freelancer {
     bio: string;
 }
 
-export function FreelancerList({ freelancers }: { freelancers: Freelancer[] }) {
+export function FreelancerList() {
+    const [freelancers, setFreelancers] = useState<Freelancer[]>([]);
     const [search, setSearch] = useState("");
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchFreelancers = async () => {
+            try {
+                const res = await fetch("/api/freelancers/search");
+                if (res.ok) {
+                    const data = await res.json();
+                    setFreelancers(data.freelancers || []);
+                }
+            } catch (error) {
+                console.error("Error fetching freelancers:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchFreelancers();
+    }, []);
 
     const filteredFreelancers = freelancers.filter(
         (freelancer) =>
@@ -62,13 +82,18 @@ export function FreelancerList({ freelancers }: { freelancers: Freelancer[] }) {
             </div>
 
             {/* Freelancer Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredFreelancers.map((freelancer) => (
-                    <FreelancerCard key={freelancer.id} {...freelancer} />
-                ))}
-            </div>
-
-            {filteredFreelancers.length === 0 && (
+            {loading ? (
+                <div className="text-center py-16">
+                    <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
+                    <p className="text-muted-foreground mt-4">Cargando freelancers...</p>
+                </div>
+            ) : filteredFreelancers.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredFreelancers.map((freelancer) => (
+                        <FreelancerCard key={freelancer.id} {...freelancer} />
+                    ))}
+                </div>
+            ) : (
                 <div className="text-center py-16">
                     <div className="w-16 h-16 rounded-full bg-muted mx-auto mb-4 flex items-center justify-center">
                         <Search className="h-8 w-8 text-muted-foreground" />
