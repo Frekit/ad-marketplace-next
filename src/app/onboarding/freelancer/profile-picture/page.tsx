@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
-
 export const dynamic = 'force-dynamic'
+
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { MapPin, Info } from "lucide-react"
 import { useRouter } from "next/navigation"
