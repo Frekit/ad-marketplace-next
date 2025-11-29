@@ -10,9 +10,6 @@ import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Mail, MessageSquare, Send, Loader2 } from "lucide-react"
 
-// Disable pre-rendering to avoid Supabase initialization errors during build
-export const dynamic = 'force-dynamic'
-
 type Message = {
     id: string
     conversation_id: string

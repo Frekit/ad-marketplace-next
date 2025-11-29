@@ -11,7 +11,8 @@
     "test:profile-upload": "tsx scripts/test-profile-upload.ts",
     "generate:embeddings": "tsx scripts/pre-generate-embeddings.ts",
     "test:sql-integration": "tsx scripts/test-sql-integration.ts",
-    "test:workflow": "tsx scripts/test-project-workflow.ts"
+    "test:workflow": "tsx scripts/test-project-workflow.ts",
+    "seed:users": "tsx scripts/seed-test-users.ts"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.15",
