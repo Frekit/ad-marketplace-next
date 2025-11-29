@@ -1,10 +1,14 @@
 import OpenAI from 'openai';
 import { createClient } from '@/lib/supabase';
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-});
+// Initialize OpenAI client lazily
+function getOpenAIClient() {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+        throw new Error('OPENAI_API_KEY is not configured');
+    }
+    return new OpenAI({ apiKey });
+}
 
 export interface ProjectData {
     id?: string;
@@ -51,6 +55,7 @@ export async function generateProjectEmbedding(project: ProjectData): Promise<nu
         ...(project.skills_required || [])
     ].join(' ');
 
+    const openai = getOpenAIClient();
     const response = await openai.embeddings.create({
         model: 'text-embedding-3-small',
         input: text,
@@ -99,6 +104,7 @@ export async function generateFreelancerEmbedding(freelancer: FreelancerData): P
         ...(freelancer.skills || [])
     ].join(' ');
 
+    const openai = getOpenAIClient();
     const response = await openai.embeddings.create({
         model: 'text-embedding-3-small',
         input: text,
