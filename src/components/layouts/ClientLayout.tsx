@@ -2,9 +2,11 @@
 
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Bell, Search, Globe, Menu, Briefcase, Wallet, Users, Settings } from "lucide-react"
+import { Bell, Search, Globe, Menu, Briefcase, Wallet, Users, Settings, LogOut } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useState } from "react"
+import { signOut } from "next-auth/react"
 
 export default function ClientLayout({
     children,
@@ -12,8 +14,13 @@ export default function ClientLayout({
     children: React.ReactNode
 }) {
     const pathname = usePathname()
+    const [showUserMenu, setShowUserMenu] = useState(false)
 
     const isActive = (path: string) => pathname?.startsWith(path)
+
+    const handleLogout = async () => {
+        await signOut({ redirectTo: "/sign-in" })
+    }
 
     return (
         <div className="min-h-screen bg-background">
@@ -39,9 +46,44 @@ export default function ClientLayout({
                         <button className="p-2 hover:bg-gray-100 rounded-full">
                             <Globe className="h-5 w-5 text-gray-600" />
                         </button>
-                        <Avatar className="h-8 w-8">
-                            <AvatarFallback className="bg-[#FF5C5C] text-white text-sm">CL</AvatarFallback>
-                        </Avatar>
+                        <div className="relative">
+                            <button
+                                onClick={() => setShowUserMenu(!showUserMenu)}
+                                className="p-1 hover:bg-gray-100 rounded-full transition"
+                            >
+                                <Avatar className="h-8 w-8">
+                                    <AvatarFallback className="bg-[#FF5C5C] text-white text-sm">CL</AvatarFallback>
+                                </Avatar>
+                            </button>
+                            {showUserMenu && (
+                                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                                    <Link
+                                        href="/profile"
+                                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-t-lg"
+                                        onClick={() => setShowUserMenu(false)}
+                                    >
+                                        Mi Perfil
+                                    </Link>
+                                    <Link
+                                        href="/settings"
+                                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                                        onClick={() => setShowUserMenu(false)}
+                                    >
+                                        Configuración
+                                    </Link>
+                                    <button
+                                        onClick={() => {
+                                            setShowUserMenu(false)
+                                            handleLogout()
+                                        }}
+                                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-b-lg flex items-center gap-2 border-t"
+                                    >
+                                        <LogOut className="h-4 w-4" />
+                                        Cerrar Sesión
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </header>

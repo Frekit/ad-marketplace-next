@@ -4,9 +4,60 @@ import FreelancerLayout from "@/components/layouts/FreelancerLayout"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { CheckCircle2, AlertCircle, Calendar, TrendingUp, Users, MessageSquare } from "lucide-react"
+import { useSession } from "next-auth/react"
+import { useState, useEffect } from "react"
+
+type DashboardStats = {
+    profileViews: number
+    proposalsReceived: number
+    activeProjects: number
+    profileCompletion: number
+}
 
 export default function FreelancerDashboard() {
-    const profileCompletion = 35
+    const { data: session } = useSession()
+    const [stats, setStats] = useState<DashboardStats | null>(null)
+    const [loading, setLoading] = useState(true)
+    const userName = session?.user?.name || "Freelancer"
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const res = await fetch("/api/freelancer/profile")
+                if (res.ok) {
+                    const data = await res.json()
+                    setStats({
+                        profileViews: data.profileViews || 0,
+                        proposalsReceived: data.proposalsReceived || 0,
+                        activeProjects: data.activeProjects || 0,
+                        profileCompletion: data.profileCompletion || 0,
+                    })
+                } else {
+                    // Fallback to default stats if API call fails
+                    setStats({
+                        profileViews: 0,
+                        proposalsReceived: 0,
+                        activeProjects: 0,
+                        profileCompletion: 0,
+                    })
+                }
+            } catch (error) {
+                console.error("Error fetching stats:", error)
+                setStats({
+                    profileViews: 0,
+                    proposalsReceived: 0,
+                    activeProjects: 0,
+                    profileCompletion: 0,
+                })
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        fetchStats()
+    }, [])
+
+    const profileCompletion = stats?.profileCompletion || 0
 
     return (
         <FreelancerLayout>
@@ -36,7 +87,7 @@ export default function FreelancerDashboard() {
                     {/* Welcome Section */}
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-3xl font-bold text-gray-900">Bienvenido de nuevo Alvaro</h1>
+                            <h1 className="text-3xl font-bold text-gray-900">Bienvenido de nuevo {userName}</h1>
                             <p className="text-gray-600 mt-1">Aquí está un resumen de tu actividad reciente</p>
                         </div>
                         <Button className="bg-[#FF5C5C] hover:bg-[#FF5C5C]/90 text-white">
@@ -45,34 +96,46 @@ export default function FreelancerDashboard() {
                     </div>
 
                     {/* Stats Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <Card className="p-6">
-                            <div className="flex items-center justify-between mb-2">
-                                <span className="text-sm text-gray-600">Vistas del perfil</span>
-                                <Users className="h-5 w-5 text-gray-400" />
-                            </div>
-                            <div className="text-3xl font-bold text-gray-900">0</div>
-                            <p className="text-xs text-gray-500 mt-1">En los últimos 30 días</p>
-                        </Card>
+                    {loading ? (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {[1, 2, 3].map((i) => (
+                                <Card key={i} className="p-6 animate-pulse">
+                                    <div className="h-4 bg-gray-200 rounded mb-2 w-1/2"></div>
+                                    <div className="h-8 bg-gray-200 rounded mb-2"></div>
+                                    <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                                </Card>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <Card className="p-6">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-sm text-gray-600">Vistas del perfil</span>
+                                    <Users className="h-5 w-5 text-gray-400" />
+                                </div>
+                                <div className="text-3xl font-bold text-gray-900">{stats?.profileViews || 0}</div>
+                                <p className="text-xs text-gray-500 mt-1">En los últimos 30 días</p>
+                            </Card>
 
-                        <Card className="p-6">
-                            <div className="flex items-center justify-between mb-2">
-                                <span className="text-sm text-gray-600">Propuestas recibidas</span>
-                                <MessageSquare className="h-5 w-5 text-gray-400" />
-                            </div>
-                            <div className="text-3xl font-bold text-gray-900">0</div>
-                            <p className="text-xs text-gray-500 mt-1">En los últimos 30 días</p>
-                        </Card>
+                            <Card className="p-6">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-sm text-gray-600">Propuestas recibidas</span>
+                                    <MessageSquare className="h-5 w-5 text-gray-400" />
+                                </div>
+                                <div className="text-3xl font-bold text-gray-900">{stats?.proposalsReceived || 0}</div>
+                                <p className="text-xs text-gray-500 mt-1">En los últimos 30 días</p>
+                            </Card>
 
-                        <Card className="p-6">
-                            <div className="flex items-center justify-between mb-2">
-                                <span className="text-sm text-gray-600">Proyectos activos</span>
-                                <Calendar className="h-5 w-5 text-gray-400" />
-                            </div>
-                            <div className="text-3xl font-bold text-gray-900">0</div>
-                            <p className="text-xs text-gray-500 mt-1">Proyectos en curso</p>
-                        </Card>
-                    </div>
+                            <Card className="p-6">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-sm text-gray-600">Proyectos activos</span>
+                                    <Calendar className="h-5 w-5 text-gray-400" />
+                                </div>
+                                <div className="text-3xl font-bold text-gray-900">{stats?.activeProjects || 0}</div>
+                                <p className="text-xs text-gray-500 mt-1">Proyectos en curso</p>
+                            </Card>
+                        </div>
+                    )}
 
                     {/* Action Required Section */}
                     <div>

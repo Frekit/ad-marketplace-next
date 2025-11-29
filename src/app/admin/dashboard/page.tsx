@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { signOut } from "next-auth/react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -82,9 +83,8 @@ export default function AdminDashboard() {
                         </div>
                         <Button
                             variant="outline"
-                            onClick={() => {
-                                fetch("/api/auth/signout", { method: "POST" })
-                                router.push("/sign-in")
+                            onClick={async () => {
+                                await signOut({ redirectTo: "/sign-in" })
                             }}
                         >
                             Cerrar Sesión
