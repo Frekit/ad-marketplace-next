@@ -1,0 +1,6 @@
+{
+  "code": "23514",
+  "details": "Failing row contains (7fee0023-7c64-4583-9d0e-5e1f297abeba, 31328c99-9b4a-468d-b3f5-908ffeba9abb, escrow_lock, 400.00, completed, Funds locked in escrow for project, null, {\"project_id\": \"0bb89676-7cce-4363-ab68-16a2ed38d577\"}, 2025-11-29 00:40:21.067687, 2025-11-29 00:40:21.067687).",
+  "hint": null,
+  "message": "new row for relation \"transactions\" violates check constraint \"transactions_type_check\""
+}
