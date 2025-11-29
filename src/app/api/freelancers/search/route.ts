@@ -89,16 +89,68 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const query = searchParams.get("q")?.toLowerCase() || "";
 
-    let filtered = MOCK_FREELANCERS;
+    let freelancers: any[] = [];
 
+    // Try to fetch real freelancers from database
+    try {
+      const supabase = createClient();
+
+      const { data: dbFreelancers, error } = await supabase
+        .from("users")
+        .select("id, first_name, last_name, email, role")
+        .eq("role", "freelancer");
+
+      if (error) {
+        console.error("Database query error:", error);
+      } else if (dbFreelancers && dbFreelancers.length > 0) {
+        // Map database freelancers to API response format
+        freelancers = dbFreelancers.map((f) => ({
+          id: f.id,
+          firstName: f.first_name || "",
+          lastName: f.last_name || "",
+          role: "Freelancer",
+          skills: [],
+          rating: 4.5,
+          reviewCount: 0,
+          hourlyRate: 50,
+          location: "Remote",
+          bio: "Professional freelancer",
+          availability: "available",
+          email: f.email,
+        }));
+
+        // Add mock test freelancers if not already in database
+        MOCK_FREELANCERS.forEach((mockFreelancer) => {
+          if (!freelancers.some((f) => f.id === mockFreelancer.id)) {
+            freelancers.push(mockFreelancer);
+          }
+        });
+      } else {
+        // Fallback to mock data if no database freelancers
+        freelancers = MOCK_FREELANCERS;
+      }
+    } catch (dbError) {
+      console.error("Error fetching from database:", dbError);
+      // Fallback to mock data on database error
+      freelancers = MOCK_FREELANCERS;
+    }
+
+    // Filter by search query
+    let filtered = freelancers;
     if (query) {
-      filtered = MOCK_FREELANCERS.filter(
-        (f) =>
+      filtered = freelancers.filter((f) => {
+        const fullName = `${f.firstName} ${f.lastName}`.toLowerCase();
+        const email = (f.email || "").toLowerCase();
+
+        return (
           f.firstName.toLowerCase().includes(query) ||
           f.lastName.toLowerCase().includes(query) ||
+          fullName.includes(query) ||
+          email.includes(query) ||
           f.role.toLowerCase().includes(query) ||
-          f.skills.some((s) => s.toLowerCase().includes(query))
-      );
+          (f.skills && f.skills.some((s: string) => s.toLowerCase().includes(query)))
+        );
+      });
     }
 
     return NextResponse.json(
@@ -109,6 +161,7 @@ export async function GET(request: NextRequest) {
       { status: 200 }
     );
   } catch (error: any) {
+    console.error("Unexpected error in freelancer search:", error);
     return NextResponse.json(
       { error: "Internal server error", details: error.message },
       { status: 500 }
