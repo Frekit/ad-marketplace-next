@@ -48,6 +48,8 @@ export default function ProjectManagementPage({ params }: { params: Promise<{ id
     const [showAIMatches, setShowAIMatches] = useState(false)
     const [aiMatches, setAIMatches] = useState<any[]>([])
     const [loadingMatches, setLoadingMatches] = useState(false)
+    const [invitations, setInvitations] = useState<any[]>([])
+    const [loadingInvitations, setLoadingInvitations] = useState(false)
 
     useEffect(() => {
         const resolveParams = async () => {
@@ -67,6 +69,7 @@ export default function ProjectManagementPage({ params }: { params: Promise<{ id
         if (projectId) {
             console.log('Loading project:', projectId)
             fetchProject()
+            fetchInvitations()
         }
     }, [projectId])
 
@@ -93,6 +96,27 @@ export default function ProjectManagementPage({ params }: { params: Promise<{ id
             setError("Error al cargar el proyecto: " + (error instanceof Error ? error.message : String(error)))
         } finally {
             setLoading(false)
+        }
+    }
+
+    const fetchInvitations = async () => {
+        if (!projectId) return
+
+        setLoadingInvitations(true)
+        try {
+            const res = await fetch(`/api/projects/${projectId}/invitations`)
+            const data = await res.json()
+
+            if (res.ok) {
+                setInvitations(data.invitations || [])
+            } else {
+                console.error('Error fetching invitations:', data)
+                // Don't show error, just silently fail
+            }
+        } catch (error) {
+            console.error('Error fetching invitations:', error)
+        } finally {
+            setLoadingInvitations(false)
         }
     }
 
@@ -313,6 +337,54 @@ export default function ProjectManagementPage({ params }: { params: Promise<{ id
                             matches={aiMatches}
                             onClose={() => setShowAIMatches(false)}
                         />
+                    )}
+
+                    {/* Invitations Section */}
+                    {invitations.length > 0 && (
+                        <div>
+                            <h2 className="text-2xl font-bold text-gray-900 mb-4">Invitaciones Enviadas</h2>
+                            <div className="space-y-4">
+                                {invitations.map((invitation) => (
+                                    <Card key={invitation.id}>
+                                        <CardContent className="p-6">
+                                            <div className="flex items-start justify-between">
+                                                <div className="flex-1 flex items-center gap-4">
+                                                    <Avatar className="h-10 w-10">
+                                                        <AvatarFallback className="bg-[#FF5C5C] text-white">
+                                                            {invitation.freelancer?.first_name?.charAt(0) || 'F'}
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                                    <div>
+                                                        <p className="font-medium">
+                                                            {invitation.freelancer?.first_name} {invitation.freelancer?.last_name}
+                                                        </p>
+                                                        <p className="text-sm text-gray-500">{invitation.freelancer?.email}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-4">
+                                                    {invitation.message && (
+                                                        <div className="text-sm text-gray-600 max-w-xs truncate">
+                                                            "{invitation.message}"
+                                                        </div>
+                                                    )}
+                                                    <Badge className={
+                                                        invitation.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                                                        invitation.status === 'accepted' ? 'bg-green-100 text-green-700' :
+                                                        invitation.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                                                        'bg-gray-100 text-gray-700'
+                                                    }>
+                                                        {invitation.status === 'pending' ? 'Pendiente' :
+                                                        invitation.status === 'accepted' ? 'Aceptada' :
+                                                        invitation.status === 'rejected' ? 'Rechazada' :
+                                                        invitation.status}
+                                                    </Badge>
+                                                </div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                ))}
+                            </div>
+                        </div>
                     )}
 
                     {/* Milestones */}
