@@ -22,36 +22,45 @@ export async function GET(req: NextRequest) {
                 id,
                 status,
                 created_at,
+                message,
                 project:projects (
                     id,
                     title,
                     description,
                     skills_required,
+                    allocated_budget,
                     created_at
                 ),
                 client:users!project_invitations_client_id_fkey (
                     id,
-                    name,
-                    email
+                    first_name,
+                    last_name,
+                    email,
+                    company_name
                 )
             `)
             .eq('freelancer_id', session.user.id)
             .order('created_at', { ascending: false });
 
         if (error) {
+            console.error('Database error:', error);
             throw error;
         }
 
         // Format the response
         const proposals = invitations?.map(inv => {
             const clientData = Array.isArray(inv.client) ? inv.client[0] : inv.client;
+            const clientName = clientData?.company_name ||
+                             `${clientData?.first_name || ''} ${clientData?.last_name || ''}`.trim() ||
+                             'Cliente';
             return {
                 id: inv.id,
                 project: inv.project,
                 client: {
-                    name: clientData?.name || 'Cliente',
-                    company: clientData?.email || '',
+                    name: clientName,
+                    email: clientData?.email || '',
                 },
+                message: inv.message,
                 status: inv.status,
                 created_at: inv.created_at,
             };
