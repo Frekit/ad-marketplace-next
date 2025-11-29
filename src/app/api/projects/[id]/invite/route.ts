@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { createClient } from '@/lib/supabase';
+import { notifyUser, notificationTemplates } from '@/lib/notifications';
 
 export async function POST(
     req: NextRequest,
@@ -25,7 +26,7 @@ export async function POST(
         // Verify project ownership
         const { data: project, error: projectError } = await supabase
             .from('projects')
-            .select('client_id, status')
+            .select('client_id, status, title')
             .eq('id', projectId)
             .single();
 
@@ -40,7 +41,7 @@ export async function POST(
         // Verify freelancer exists and is actually a freelancer
         const { data: freelancer, error: freelancerError } = await supabase
             .from('users')
-            .select('id, role')
+            .select('id, role, email')
             .eq('id', freelancerId)
             .single();
 
@@ -90,7 +91,29 @@ export async function POST(
             throw invitationError;
         }
 
-        // TODO: Send notification to freelancer (email/in-app)
+        // Send notification to freelancer
+        const { data: client, error: clientError } = await supabase
+            .from('users')
+            .select('id, first_name')
+            .eq('id', session.user.id)
+            .single();
+
+        if (freelancer.email) {
+            const clientName = client?.first_name || 'A client';
+            const template = notificationTemplates.PROJECT_INVITATION(
+                clientName,
+                project.title || 'a project'
+            );
+
+            await notifyUser(
+                freelancerId,
+                freelancer.email,
+                template.type,
+                template.title,
+                template.message,
+                { projectId, invitationId: invitation.id, clientName, message }
+            );
+        }
 
         return NextResponse.json({
             invitationId: invitation.id,

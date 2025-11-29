@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { createClient } from '@/lib/supabase';
+import { notifyUser, notificationTemplates } from '@/lib/notifications';
 
 export async function POST(
     req: NextRequest,
@@ -82,7 +83,36 @@ export async function POST(
             throw updateError;
         }
 
-        // TODO: Notify client about milestone completion
+        // Get project and client info for notification
+        const { data: project, error: projectError } = await supabase
+            .from('projects')
+            .select('id, title, client_id')
+            .eq('id', contract.project_id)
+            .single();
+
+        if (project && project.client_id) {
+            const { data: client, error: clientError } = await supabase
+                .from('users')
+                .select('id, email')
+                .eq('id', project.client_id)
+                .single();
+
+            if (client && client.email) {
+                const template = notificationTemplates.MILESTONE_COMPLETED(
+                    project.title,
+                    milestone.name
+                );
+
+                await notifyUser(
+                    client.id,
+                    client.email,
+                    template.type,
+                    template.title,
+                    template.message,
+                    { contractId, milestoneId, projectTitle: project.title, milestoneName: milestone.name }
+                );
+            }
+        }
 
         return NextResponse.json({
             message: 'Milestone marked as complete. Awaiting client approval.',
