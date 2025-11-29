@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase";
 
 export const dynamic = 'force-dynamic';
 
 const MOCK_FREELANCERS = [
   {
-    id: "1",
+    id: "550e8400-e29b-41d4-a716-446655440001",
     firstName: "Sarah",
     lastName: "Johnson",
     role: "Facebook Ads Specialist",
@@ -17,7 +18,7 @@ const MOCK_FREELANCERS = [
     availability: "available",
   },
   {
-    id: "2",
+    id: "550e8400-e29b-41d4-a716-446655440002",
     firstName: "Michael",
     lastName: "Chen",
     role: "Google Ads Expert",
@@ -30,7 +31,7 @@ const MOCK_FREELANCERS = [
     availability: "available",
   },
   {
-    id: "3",
+    id: "550e8400-e29b-41d4-a716-446655440003",
     firstName: "Emma",
     lastName: "Rodriguez",
     role: "Social Media Manager",
@@ -43,7 +44,7 @@ const MOCK_FREELANCERS = [
     availability: "available",
   },
   {
-    id: "4",
+    id: "550e8400-e29b-41d4-a716-446655440004",
     firstName: "David",
     lastName: "Kim",
     role: "SEO Specialist",
@@ -56,7 +57,7 @@ const MOCK_FREELANCERS = [
     availability: "available",
   },
   {
-    id: "5",
+    id: "550e8400-e29b-41d4-a716-446655440005",
     firstName: "Lisa",
     lastName: "Anderson",
     role: "Email Marketing Strategist",
@@ -69,7 +70,7 @@ const MOCK_FREELANCERS = [
     availability: "available",
   },
   {
-    id: "6",
+    id: "550e8400-e29b-41d4-a716-446655440006",
     firstName: "James",
     lastName: "Taylor",
     role: "Video Marketing Expert",
