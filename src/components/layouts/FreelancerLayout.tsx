@@ -2,11 +2,12 @@
 
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Bell, Search, Globe, Menu, MessageSquare, TrendingUp, Briefcase, LogOut } from "lucide-react"
+import { Search, Globe, Menu, MessageSquare, TrendingUp, Briefcase, LogOut } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
-import { signOut } from "next-auth/react"
+import { signOut, useSession } from "next-auth/react"
+import NotificationBell from "@/components/notifications/notification-bell"
 
 export default function FreelancerLayout({
     children,
@@ -14,6 +15,7 @@ export default function FreelancerLayout({
     children: React.ReactNode
 }) {
     const pathname = usePathname()
+    const { data: session } = useSession()
     const [showUserMenu, setShowUserMenu] = useState(false)
 
     const isActive = (path: string) => pathname?.startsWith(path)
@@ -39,10 +41,7 @@ export default function FreelancerLayout({
                         <button className="p-2 hover:bg-gray-100 rounded-full">
                             <Search className="h-5 w-5 text-gray-600" />
                         </button>
-                        <button className="p-2 hover:bg-gray-100 rounded-full relative">
-                            <Bell className="h-5 w-5 text-gray-600" />
-                            <span className="absolute top-1 right-1 h-2 w-2 bg-[#FF5C5C] rounded-full"></span>
-                        </button>
+                        <NotificationBell userId={session?.user?.id} />
                         <button className="p-2 hover:bg-gray-100 rounded-full">
                             <Globe className="h-5 w-5 text-gray-600" />
                         </button>
@@ -140,6 +139,13 @@ export default function FreelancerLayout({
                         >
                             <TrendingUp className="h-5 w-5" />
                             Reseñas y Calificaciones
+                        </Link>
+                        <Link
+                            href="/freelancer/notifications"
+                            className={`flex items-center gap-3 px-4 py-3 rounded-lg ${isActive('/freelancer/notifications') ? 'bg-gray-50 text-gray-900 font-medium' : 'hover:bg-gray-50 text-gray-600'}`}
+                        >
+                            <div className="h-5 w-5">🔔</div>
+                            Notificaciones
                         </Link>
 
                         <div className="pt-4 pb-2">
