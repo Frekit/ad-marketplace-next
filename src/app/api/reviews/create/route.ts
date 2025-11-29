@@ -2,33 +2,24 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { createClient } from '@/lib/supabase';
 import { notifyUser } from '@/lib/notifications';
+import { validateReviewData, ValidationResult } from '@/lib/validation';
+import { ApiResponse, ApiErrors } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
     try {
         const session = await auth();
 
         if (!session?.user || session.user.role !== 'client') {
-            return NextResponse.json(
-                { error: 'Unauthorized. Only clients can leave reviews.' },
-                { status: 401 }
-            );
+            return ApiResponse.unauthorized();
         }
 
-        const { freelancer_id, project_id, rating, review_text } = await req.json();
+        const body = await req.json();
+        const { freelancer_id, project_id, rating, review_text } = body;
 
         // Validate input
-        if (!freelancer_id || !rating) {
-            return NextResponse.json(
-                { error: 'Freelancer ID and rating are required' },
-                { status: 400 }
-            );
-        }
-
-        if (rating < 1 || rating > 5) {
-            return NextResponse.json(
-                { error: 'Rating must be between 1 and 5' },
-                { status: 400 }
-            );
+        const validation = validateReviewData({ freelancer_id, rating, review_text });
+        if (!validation.isValid()) {
+            return ApiResponse.validationError(validation.errors);
         }
 
         const supabase = createClient();
@@ -92,9 +83,6 @@ export async function POST(req: NextRequest) {
 
     } catch (error: any) {
         console.error('Error creating review:', error);
-        return NextResponse.json(
-            { error: error.message || 'Failed to create review' },
-            { status: 500 }
-        );
+        return ApiResponse.error(error);
     }
 }
