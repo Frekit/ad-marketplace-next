@@ -3,7 +3,7 @@
 import FreelancerLayout from "@/components/layouts/FreelancerLayout"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { CheckCircle2, AlertCircle, Calendar, TrendingUp, Users, MessageSquare } from "lucide-react"
+import { CheckCircle2, AlertCircle, Calendar, TrendingUp, Users, MessageSquare, Briefcase, Clock, ArrowRight } from "lucide-react"
 import { useSession } from "next-auth/react"
 import { useState, useEffect } from "react"
 
@@ -14,10 +14,29 @@ type DashboardStats = {
     profileCompletion: number
 }
 
+type Proposal = {
+    id: string
+    project: {
+        id: string
+        title: string
+        description: string
+        skills_required: string[]
+        created_at: string
+    }
+    client: {
+        name: string
+        company: string
+    }
+    status: string
+    created_at: string
+}
+
 export default function FreelancerDashboard() {
     const { data: session } = useSession()
     const [stats, setStats] = useState<DashboardStats | null>(null)
+    const [proposals, setProposals] = useState<Proposal[]>([])
     const [loading, setLoading] = useState(true)
+    const [loadingProposals, setLoadingProposals] = useState(true)
     const userName = session?.user?.name || "Freelancer"
 
     useEffect(() => {
@@ -54,7 +73,22 @@ export default function FreelancerDashboard() {
             }
         }
 
+        const fetchProposals = async () => {
+            try {
+                const res = await fetch("/api/freelancer/proposals")
+                if (res.ok) {
+                    const data = await res.json()
+                    setProposals(data.proposals || [])
+                }
+            } catch (error) {
+                console.error("Error fetching proposals:", error)
+            } finally {
+                setLoadingProposals(false)
+            }
+        }
+
         fetchStats()
+        fetchProposals()
     }, [])
 
     const profileCompletion = stats?.profileCompletion || 0
@@ -139,6 +173,60 @@ export default function FreelancerDashboard() {
                             </Card>
                         </div>
                     )}
+
+                    {/* My Proposals Section */}
+                    <div>
+                        <h2 className="text-xl font-bold text-gray-900 mb-4">Mis Propuestas</h2>
+                        {loadingProposals ? (
+                            <div className="space-y-3">
+                                {[1, 2].map((i) => (
+                                    <Card key={i} className="p-4 animate-pulse">
+                                        <div className="h-4 bg-gray-200 rounded mb-2 w-1/2"></div>
+                                        <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                                    </Card>
+                                ))}
+                            </div>
+                        ) : proposals.length > 0 ? (
+                            <div className="space-y-3">
+                                {proposals.map((proposal) => (
+                                    <Card key={proposal.id} className="p-4 hover:shadow-md transition-shadow">
+                                        <div className="flex items-start justify-between">
+                                            <div className="flex-1">
+                                                <h3 className="font-semibold text-gray-900">{proposal.project.title}</h3>
+                                                <p className="text-sm text-gray-600 mt-1">{proposal.project.description?.substring(0, 100)}...</p>
+                                                <div className="flex items-center gap-4 mt-3">
+                                                    <span className="text-xs text-gray-500">
+                                                        Cliente: <span className="font-medium text-gray-700">{proposal.client.name}</span>
+                                                    </span>
+                                                    <span className={`text-xs font-medium px-2 py-1 rounded-full ${
+                                                        proposal.status === 'pending'
+                                                            ? 'bg-yellow-100 text-yellow-800'
+                                                            : proposal.status === 'accepted'
+                                                            ? 'bg-green-100 text-green-800'
+                                                            : 'bg-red-100 text-red-800'
+                                                    }`}>
+                                                        {proposal.status === 'pending' && '⏳ Pendiente'}
+                                                        {proposal.status === 'accepted' && '✅ Aceptada'}
+                                                        {proposal.status === 'rejected' && '❌ Rechazada'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <Button className="ml-4 bg-blue-600 hover:bg-blue-700 text-white">
+                                                Ver detalles
+                                                <ArrowRight className="w-4 h-4 ml-2" />
+                                            </Button>
+                                        </div>
+                                    </Card>
+                                ))}
+                            </div>
+                        ) : (
+                            <Card className="p-8 text-center">
+                                <Briefcase className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                                <p className="text-gray-600">No tienes propuestas de proyectos aún</p>
+                                <p className="text-sm text-gray-500 mt-2">Completa tu perfil para recibir propuestas de clientes</p>
+                            </Card>
+                        )}
+                    </div>
 
                     {/* Action Required Section */}
                     <div>
