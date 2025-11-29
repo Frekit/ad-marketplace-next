@@ -3,6 +3,7 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { FreelancerList } from "@/components/freelancer-list";
 import { ArrowRight, Sparkles, TrendingUp, Shield } from "lucide-react";
+import { redirect } from "next/navigation";
 
 // Mock data - will be replaced with database queries
 const MOCK_FREELANCERS = [
@@ -83,6 +84,15 @@ const MOCK_FREELANCERS = [
 export default async function Home() {
   const session = await auth();
 
+  // Redirect authenticated users to their dashboard
+  if (session?.user) {
+    if (session.user.role === "client") {
+      redirect("/dashboard/client");
+    } else if (session.user.role === "freelancer") {
+      redirect("/dashboard/freelancer");
+    }
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-background via-background to-muted/20">
       {/* Header */}
@@ -111,27 +121,7 @@ export default async function Home() {
             </nav>
 
             <div className="flex items-center gap-3">
-              {session?.user ? (
-                <>
-                  <Link href={session.user.role === "client" ? "/dashboard/client" : "/dashboard/freelancer"}>
-                    <Button variant="ghost" size="sm">Dashboard</Button>
-                  </Link>
-                  {session.user.role === "client" && (
-                    <Link href="/wallet">
-                      <Button variant="ghost" size="sm">Wallet</Button>
-                    </Link>
-                  )}
-                  <Link href="/messages">
-                    <Button variant="ghost" size="sm">Messages</Button>
-                  </Link>
-                  <Link href="/orders">
-                    <Button variant="ghost" size="sm">Orders</Button>
-                  </Link>
-                  <Link href="/profile">
-                    <Button size="sm" className="rounded-full">Profile</Button>
-                  </Link>
-                </>
-              ) : (
+              {!session?.user ? (
                 <>
                   <Link href="/sign-in">
                     <Button variant="ghost" size="sm">Sign In</Button>
@@ -140,7 +130,7 @@ export default async function Home() {
                     <Button size="sm" className="rounded-full">Get Started</Button>
                   </Link>
                 </>
-              )}
+              ) : null}
             </div>
           </div>
         </div>

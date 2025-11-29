@@ -1,140 +1,116 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/auth';
-import { createClient } from '@/lib/supabase';
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req: NextRequest) {
-    try {
-        const session = await auth();
+export const dynamic = 'force-dynamic';
 
-        // Only clients can search for freelancers
-        if (!session?.user || session.user.role !== 'client') {
-            return NextResponse.json(
-                { error: 'Unauthorized - Only clients can search freelancers' },
-                { status: 401 }
-            );
-        }
+const MOCK_FREELANCERS = [
+  {
+    id: "1",
+    firstName: "Sarah",
+    lastName: "Johnson",
+    role: "Facebook Ads Specialist",
+    skills: ["Facebook Ads", "Instagram Ads", "Social Media Marketing", "Analytics"],
+    rating: 4.9,
+    reviewCount: 127,
+    hourlyRate: 85,
+    location: "New York, USA",
+    bio: "10+ years experience managing Facebook ad campaigns for e-commerce brands. Specialized in ROAS optimization and scaling.",
+    availability: "available",
+  },
+  {
+    id: "2",
+    firstName: "Michael",
+    lastName: "Chen",
+    role: "Google Ads Expert",
+    skills: ["Google Ads", "PPC", "SEM", "Conversion Optimization"],
+    rating: 5.0,
+    reviewCount: 89,
+    hourlyRate: 95,
+    location: "San Francisco, USA",
+    bio: "Certified Google Ads professional with proven track record of reducing CPA by 40% on average.",
+    availability: "available",
+  },
+  {
+    id: "3",
+    firstName: "Emma",
+    lastName: "Rodriguez",
+    role: "Social Media Manager",
+    skills: ["Instagram", "TikTok", "Content Strategy", "Influencer Marketing"],
+    rating: 4.8,
+    reviewCount: 156,
+    hourlyRate: 75,
+    location: "Miami, USA",
+    bio: "Creative social media strategist helping brands grow their presence on Instagram and TikTok.",
+    availability: "available",
+  },
+  {
+    id: "4",
+    firstName: "David",
+    lastName: "Kim",
+    role: "SEO Specialist",
+    skills: ["SEO", "Content Marketing", "Link Building", "Technical SEO"],
+    rating: 4.9,
+    reviewCount: 203,
+    hourlyRate: 80,
+    location: "Austin, USA",
+    bio: "Data-driven SEO expert with 8 years experience ranking websites in competitive niches.",
+    availability: "available",
+  },
+  {
+    id: "5",
+    firstName: "Lisa",
+    lastName: "Anderson",
+    role: "Email Marketing Strategist",
+    skills: ["Email Marketing", "Automation", "Copywriting", "A/B Testing"],
+    rating: 4.7,
+    reviewCount: 94,
+    hourlyRate: 70,
+    location: "Chicago, USA",
+    bio: "Email marketing specialist focused on building automated funnels that convert.",
+    availability: "available",
+  },
+  {
+    id: "6",
+    firstName: "James",
+    lastName: "Taylor",
+    role: "Video Marketing Expert",
+    skills: ["Video Production", "YouTube Ads", "TikTok Marketing", "Video Editing"],
+    rating: 5.0,
+    reviewCount: 67,
+    hourlyRate: 90,
+    location: "Los Angeles, USA",
+    bio: "Award-winning video marketer creating viral campaigns for brands across all platforms.",
+    availability: "available",
+  },
+];
 
-        const supabase = createClient();
-        const { searchParams } = new URL(req.url);
+export async function GET(request: NextRequest) {
+  try {
+    const searchParams = request.nextUrl.searchParams;
+    const query = searchParams.get("q")?.toLowerCase() || "";
 
-        // Extract search parameters
-        const q = searchParams.get('q'); // keyword search (name, bio)
-        const skills = searchParams.get('skills'); // comma-separated
-        const minRate = searchParams.get('min_rate');
-        const maxRate = searchParams.get('max_rate');
-        const availability = searchParams.get('availability'); // available, busy, unavailable
-        const sort = searchParams.get('sort') || 'rating_desc'; // rating_desc, rate_asc, rate_desc, newest
+    let filtered = MOCK_FREELANCERS;
 
-        // Build query - join users with freelancer_profiles
-        let query = supabase
-            .from('users')
-            .select(`
-                id,
-                email,
-                first_name,
-                last_name,
-                created_at,
-                freelancer_profiles!inner (
-                    id,
-                    hourly_rate,
-                    skills,
-                    bio,
-                    availability,
-                    rating,
-                    total_jobs,
-                    total_earnings,
-                    profile_completion
-                )
-            `)
-            .eq('role', 'freelancer');
-
-        // Apply keyword search (first_name, last_name, or bio)
-        if (q) {
-            query = query.or(`first_name.ilike.%${q}%,last_name.ilike.%${q}%,freelancer_profiles.bio.ilike.%${q}%`);
-        }
-
-        // Apply skills filter (freelancers that have at least one of the requested skills)
-        if (skills) {
-            const skillsArray = skills.split(',').map(s => s.trim());
-            query = query.overlaps('freelancer_profiles.skills', skillsArray);
-        }
-
-        // Apply hourly rate filters
-        if (minRate) {
-            query = query.gte('freelancer_profiles.hourly_rate', parseFloat(minRate));
-        }
-        if (maxRate) {
-            query = query.lte('freelancer_profiles.hourly_rate', parseFloat(maxRate));
-        }
-
-        // Apply availability filter
-        if (availability) {
-            query = query.eq('freelancer_profiles.availability', availability);
-        }
-
-        // Apply sorting
-        switch (sort) {
-            case 'rating_desc':
-                query = query.order('rating', {
-                    ascending: false,
-                    nullsFirst: false,
-                    foreignTable: 'freelancer_profiles'
-                });
-                break;
-            case 'rate_asc':
-                query = query.order('hourly_rate', {
-                    ascending: true,
-                    nullsFirst: false,
-                    foreignTable: 'freelancer_profiles'
-                });
-                break;
-            case 'rate_desc':
-                query = query.order('hourly_rate', {
-                    ascending: false,
-                    nullsFirst: false,
-                    foreignTable: 'freelancer_profiles'
-                });
-                break;
-            case 'newest':
-                query = query.order('created_at', { ascending: false });
-                break;
-            default:
-                query = query.order('rating', {
-                    ascending: false,
-                    nullsFirst: false,
-                    foreignTable: 'freelancer_profiles'
-                });
-        }
-
-        const { data: freelancers, error } = await query;
-
-        if (error) {
-            console.error('Supabase error:', error);
-            throw error;
-        }
-
-        // Transform the data to flatten the structure
-        const transformedFreelancers = freelancers?.map(freelancer => ({
-            id: freelancer.id,
-            email: freelancer.email,
-            first_name: freelancer.first_name,
-            last_name: freelancer.last_name,
-            created_at: freelancer.created_at,
-            profile: Array.isArray(freelancer.freelancer_profiles)
-                ? freelancer.freelancer_profiles[0]
-                : freelancer.freelancer_profiles
-        })) || [];
-
-        return NextResponse.json({
-            freelancers: transformedFreelancers,
-            count: transformedFreelancers.length
-        });
-
-    } catch (error: any) {
-        console.error('Error searching freelancers:', error);
-        return NextResponse.json(
-            { error: error.message || 'Failed to search freelancers' },
-            { status: 500 }
-        );
+    if (query) {
+      filtered = MOCK_FREELANCERS.filter(
+        (f) =>
+          f.firstName.toLowerCase().includes(query) ||
+          f.lastName.toLowerCase().includes(query) ||
+          f.role.toLowerCase().includes(query) ||
+          f.skills.some((s) => s.toLowerCase().includes(query))
+      );
     }
+
+    return NextResponse.json(
+      {
+        freelancers: filtered,
+        total: filtered.length,
+      },
+      { status: 200 }
+    );
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: "Internal server error", details: error.message },
+      { status: 500 }
+    );
+  }
 }
