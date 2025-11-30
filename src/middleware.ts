@@ -12,32 +12,38 @@ export async function middleware(request: NextRequest) {
         '/freelancer',
         '/client',
         '/admin',
-        '/messages',
-        '/inbox',
-        '/wallet',
-        '/profile',
-        '/projects',
-        '/orders',
-        '/contracts',
-        '/onboarding',
-        '/freelancers',  // Browse freelancers requires authentication
-        '/gigs',         // Browse gigs requires authentication
-        '/my-info',      // User info requires authentication
-        '/payments',     // Payments requires authentication
+        '/messages',      // Messages require authentication
+        '/inbox',         // Inbox requires authentication
+        '/wallet',        // Wallet requires authentication
+        '/profile',       // User's own profile requires authentication
+        '/projects',      // Projects require authentication
+        '/orders',        // Orders require authentication
+        '/contracts',     // Contracts require authentication
+        '/onboarding',    // Onboarding requires authentication
+        '/gigs',          // Browse gigs requires authentication
+        '/my-info',       // User info requires authentication
+        '/payments',      // Payments requires authentication
     ];
 
     // Public routes that don't require authentication (can be accessed without logging in)
     const publicRoutes = [
-        '/',
-        '/sign-in',
-        '/sign-up',
-        '/api/auth',  // Auth endpoints are public
+        '/',              // Landing page
+        '/sign-in',       // Sign in page
+        '/sign-up',       // Sign up page
+        '/freelancers',   // Browse freelancers - PUBLIC
+        '/api/auth',      // Auth endpoints
     ];
 
     const pathname = request.nextUrl.pathname;
-    const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
 
-    if (isProtectedRoute) {
+    // Check if this is a freelancer profile view (public) - pattern: /freelancers/[id]
+    const isFreelancerProfileView = /^\/freelancers\/[^/]+$/.test(pathname);
+
+    const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
+    const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route)) || isFreelancerProfileView;
+
+    // Only enforce authentication for protected routes, not public routes
+    if (isProtectedRoute && !isPublicRoute) {
         const session = await auth();
         if (!session?.user) {
             return NextResponse.redirect(new URL('/sign-in', request.url));
