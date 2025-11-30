@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
-import { Plus, X, ArrowRight, Briefcase, Calendar, Euro } from "lucide-react"
+import { Plus, X, ArrowRight, Briefcase, Calendar, Euro, MessageSquare, CheckCircle, XCircle, AlertCircle, ArrowLeft } from "lucide-react"
+import Link from "next/link"
 
 type Milestone = {
     id: string
@@ -19,21 +20,44 @@ type Milestone = {
     description: string
 }
 
+type Proposal = {
+    id: string
+    project_id: string
+    freelancer_id: string
+    client_id: string
+    duration: number
+    hourly_rate: number
+    total_amount: number
+    status: 'pending' | 'negotiating' | 'accepted' | 'rejected'
+    milestones: Array<{
+        name: string
+        description: string
+        amount: number
+        due_date: string
+    }>
+    created_at: string
+    conversation_id?: string
+}
+
+type ProjectDetails = {
+    id: string
+    title: string
+    description: string
+    skills_required: string[]
+}
+
+type ClientDetails = {
+    id: string
+    first_name: string
+    last_name: string
+    email: string
+}
+
 type ProposalDetails = {
     id: string
-    project: {
-        id: string
-        title: string
-        description: string
-        skills_required: string[]
-        created_at: string
-    }
-    client: {
-        name: string
-        company?: string
-    }
-    status: string
-    message?: string
+    proposal: Proposal
+    project: ProjectDetails
+    client: ClientDetails
 }
 
 export default function ProposalDetailsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -42,6 +66,8 @@ export default function ProposalDetailsPage({ params }: { params: Promise<{ id: 
     const [submitting, setSubmitting] = useState(false)
     const [error, setError] = useState("")
     const [proposal, setProposal] = useState<ProposalDetails | null>(null)
+    const [showOfferForm, setShowOfferForm] = useState(false)
+    const [action, setAction] = useState<'accept' | 'negotiate' | 'reject' | null>(null)
 
     // Offer form state
     const [coverLetter, setCoverLetter] = useState("")
@@ -109,6 +135,77 @@ export default function ProposalDetailsPage({ params }: { params: Promise<{ id: 
 
     const totalAmount = milestones.reduce((sum, m) => sum + (Number(m.amount) || 0), 0)
 
+    const handleRejectProposal = async () => {
+        if (!proposal) return
+        setSubmitting(true)
+        setError("")
+
+        try {
+            const res = await fetch(`/api/project-proposals/${proposal.proposal.id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ status: "rejected" })
+            })
+
+            const data = await res.json()
+            if (!res.ok) {
+                throw new Error(data.error || "Error al rechazar propuesta")
+            }
+
+            alert("Propuesta rechazada.")
+            router.push("/freelancer/proposals")
+        } catch (err: any) {
+            setError(err.message)
+        } finally {
+            setSubmitting(false)
+        }
+    }
+
+    const handleAcceptProposal = async () => {
+        if (!proposal) return
+        setSubmitting(true)
+        setError("")
+
+        try {
+            // Accept the proposal and submit an offer using the same terms
+            const res = await fetch(`/api/freelancer/proposals/${proposal.proposal.id}/offer`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    coverLetter: `Acepto los términos propuestos para este proyecto.`,
+                    milestones: proposal.proposal.milestones.map(m => ({
+                        name: m.name,
+                        description: m.description,
+                        amount: m.amount,
+                        due_date: m.due_date
+                    })),
+                    totalAmount: proposal.proposal.total_amount,
+                    based_on_proposal_id: proposal.proposal.id
+                })
+            })
+
+            const data = await res.json()
+            if (!res.ok) {
+                throw new Error(data.error || "Error al aceptar propuesta")
+            }
+
+            alert("¡Propuesta aceptada! El cliente recibirá una notificación.")
+            router.push("/freelancer/proposals")
+        } catch (err: any) {
+            setError(err.message)
+        } finally {
+            setSubmitting(false)
+        }
+    }
+
+    const handleNegotiateProposal = () => {
+        if (!proposal?.proposal.conversation_id) {
+            setError("Error: No hay conversación disponible para negociar")
+            return
+        }
+        router.push(`/conversations/${proposal.proposal.conversation_id}`)
+    }
+
     const handleSubmitOffer = async () => {
         setError("")
 
@@ -152,7 +249,8 @@ export default function ProposalDetailsPage({ params }: { params: Promise<{ id: 
                 throw new Error(data.error || "Error al enviar la oferta")
             }
 
-            router.push("/freelancer/proposals?success=true")
+            alert("¡Oferta enviada! El cliente recibirá una notificación.")
+            router.push("/freelancer/proposals")
         } catch (err: any) {
             setError(err.message)
             setSubmitting(false)
@@ -186,12 +284,19 @@ export default function ProposalDetailsPage({ params }: { params: Promise<{ id: 
 
     if (!proposal) return null
 
-    const canSubmitOffer = proposal.status === 'pending'
+    const proposalStatus = proposal.proposal.status
+    const isProposalActive = proposalStatus === 'pending'
 
     return (
         <FreelancerLayout>
             <div className="p-8">
                 <div className="max-w-4xl mx-auto space-y-6">
+                    {/* Back Link */}
+                    <Link href="/freelancer/proposals" className="text-[#0F4C5C] hover:underline flex items-center gap-1">
+                        <ArrowLeft className="h-4 w-4" />
+                        Volver a propuestas
+                    </Link>
+
                     {/* Project Details */}
                     <Card>
                         <CardHeader>
@@ -199,12 +304,19 @@ export default function ProposalDetailsPage({ params }: { params: Promise<{ id: 
                                 <div>
                                     <CardTitle className="text-2xl">{proposal.project.title}</CardTitle>
                                     <CardDescription className="mt-2">
-                                        De: <span className="font-medium">{proposal.client.name}</span>
-                                        {proposal.client.company && ` • ${proposal.client.company}`}
+                                        De: <span className="font-medium">{proposal.client.first_name} {proposal.client.last_name}</span>
                                     </CardDescription>
                                 </div>
-                                <Badge className={proposal.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : ''}>
-                                    {proposal.status === 'pending' ? 'Pendiente' : proposal.status}
+                                <Badge className={
+                                    proposalStatus === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                                    proposalStatus === 'negotiating' ? 'bg-blue-100 text-blue-700' :
+                                    proposalStatus === 'accepted' ? 'bg-green-100 text-green-700' :
+                                    'bg-red-100 text-red-700'
+                                }>
+                                    {proposalStatus === 'pending' ? 'Pendiente' :
+                                     proposalStatus === 'negotiating' ? 'Negociando' :
+                                     proposalStatus === 'accepted' ? 'Aceptada' :
+                                     'Rechazada'}
                                 </Badge>
                             </div>
                         </CardHeader>
@@ -217,23 +329,123 @@ export default function ProposalDetailsPage({ params }: { params: Promise<{ id: 
                             <div>
                                 <h4 className="font-semibold mb-2">Habilidades Requeridas</h4>
                                 <div className="flex flex-wrap gap-2">
-                                    {proposal.project.skills_required.map((skill) => (
+                                    {proposal.project.skills_required && proposal.project.skills_required.map((skill) => (
                                         <Badge key={skill} variant="outline">{skill}</Badge>
                                     ))}
                                 </div>
                             </div>
+                        </CardContent>
+                    </Card>
 
-                            {proposal.message && (
-                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                                    <h4 className="font-semibold mb-2 text-blue-900">Mensaje del Cliente</h4>
-                                    <p className="text-blue-800">{proposal.message}</p>
+                    {/* Proposal Terms */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Términos Propuestos</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="grid grid-cols-3 gap-4">
+                                <div>
+                                    <p className="text-sm text-gray-600 mb-1">Duración</p>
+                                    <p className="font-semibold text-lg flex items-center gap-2">
+                                        <Calendar className="h-4 w-4 text-gray-400" />
+                                        {proposal.proposal.duration} días
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-gray-600 mb-1">Tarifa Horaria</p>
+                                    <p className="font-semibold text-lg flex items-center gap-2">
+                                        <Euro className="h-4 w-4 text-gray-400" />
+                                        €{proposal.proposal.hourly_rate}/hora
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-gray-600 mb-1">Total</p>
+                                    <p className="font-semibold text-lg text-[#0F4C5C]">€{proposal.proposal.total_amount.toFixed(2)}</p>
+                                </div>
+                            </div>
+
+                            {/* Milestones */}
+                            {proposal.proposal.milestones && proposal.proposal.milestones.length > 0 && (
+                                <div className="border-t pt-4 mt-4">
+                                    <h4 className="font-semibold mb-3">Hitos</h4>
+                                    <div className="space-y-3">
+                                        {proposal.proposal.milestones.map((milestone, idx) => (
+                                            <div key={idx} className="bg-gray-50 rounded p-3 border border-gray-200">
+                                                <div className="flex items-start justify-between mb-2">
+                                                    <p className="font-medium text-gray-900">{milestone.name}</p>
+                                                    <p className="font-semibold text-[#0F4C5C]">€{milestone.amount.toFixed(2)}</p>
+                                                </div>
+                                                {milestone.description && (
+                                                    <p className="text-sm text-gray-600 mb-2">{milestone.description}</p>
+                                                )}
+                                                <p className="text-xs text-gray-500 flex items-center gap-1">
+                                                    <Calendar className="h-3 w-3" />
+                                                    {new Date(milestone.due_date).toLocaleDateString('es-ES')}
+                                                </p>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             )}
                         </CardContent>
                     </Card>
 
+                    {error && (
+                        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded flex items-start gap-3">
+                            <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                            <p>{error}</p>
+                        </div>
+                    )}
+
+                    {/* Action Buttons - Only if proposal is active */}
+                    {isProposalActive && !showOfferForm && (
+                        <Card className="border-2 border-[#0F4C5C]">
+                            <CardHeader>
+                                <CardTitle className="text-lg">¿Qué deseas hacer?</CardTitle>
+                                <CardDescription>Tienes tres opciones para responder a esta propuesta</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    {/* Accept Option */}
+                                    <button
+                                        onClick={handleAcceptProposal}
+                                        disabled={submitting}
+                                        className="p-4 border-2 border-green-200 rounded-lg hover:bg-green-50 transition-colors flex flex-col items-center gap-2 text-center"
+                                    >
+                                        <CheckCircle className="h-8 w-8 text-green-600" />
+                                        <span className="font-semibold text-green-900">Aceptar</span>
+                                        <span className="text-xs text-green-700">Acepta los términos tal como están</span>
+                                        {submitting && <span className="text-xs text-gray-500">Procesando...</span>}
+                                    </button>
+
+                                    {/* Negotiate Option */}
+                                    <button
+                                        onClick={handleNegotiateProposal}
+                                        className="p-4 border-2 border-blue-200 rounded-lg hover:bg-blue-50 transition-colors flex flex-col items-center gap-2 text-center"
+                                    >
+                                        <MessageSquare className="h-8 w-8 text-blue-600" />
+                                        <span className="font-semibold text-blue-900">Negociar</span>
+                                        <span className="text-xs text-blue-700">Discute términos en el chat</span>
+                                    </button>
+
+                                    {/* Reject Option */}
+                                    <button
+                                        onClick={handleRejectProposal}
+                                        disabled={submitting}
+                                        className="p-4 border-2 border-red-200 rounded-lg hover:bg-red-50 transition-colors flex flex-col items-center gap-2 text-center"
+                                    >
+                                        <XCircle className="h-8 w-8 text-red-600" />
+                                        <span className="font-semibold text-red-900">Rechazar</span>
+                                        <span className="text-xs text-red-700">No estoy interesado</span>
+                                        {submitting && <span className="text-xs text-gray-500">Procesando...</span>}
+                                    </button>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+
                     {/* Offer Form */}
-                    {canSubmitOffer && (
+                    {showOfferForm && (
                         <Card>
                             <CardHeader>
                                 <CardTitle>Enviar Tu Oferta</CardTitle>
@@ -356,10 +568,10 @@ export default function ProposalDetailsPage({ params }: { params: Promise<{ id: 
                         </Card>
                     )}
 
-                    {!canSubmitOffer && (
+                    {!isProposalActive && (
                         <Card className="p-8 text-center">
                             <p className="text-gray-600 mb-4">
-                                Esta propuesta ya no está disponible para enviar ofertas.
+                                Esta propuesta ya ha sido {proposalStatus === 'rejected' ? 'rechazada' : 'procesada'}.
                             </p>
                             <Button onClick={() => router.push('/freelancer/proposals')}>
                                 Volver a Propuestas
