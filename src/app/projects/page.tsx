@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { FolderOpen, Plus, Eye, Edit2, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { EmptyState } from "@/components/empty-state"
 
 type Project = {
     id: string
@@ -136,25 +137,14 @@ export default function ClientProjectsPage() {
                     )}
 
                     {projects.length === 0 ? (
-                        <Card className="p-12">
-                            <div className="flex flex-col items-center justify-center text-center">
-                                <div className="mb-6">
-                                    <div className="inline-flex items-center justify-center w-24 h-24 bg-gray-100 rounded-full mb-4">
-                                        <FolderOpen className="h-12 w-12 text-gray-400" />
-                                    </div>
-                                </div>
-                                <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                                    ¡Sin proyectos aún!
-                                </h2>
-                                <p className="text-gray-600 max-w-md mb-8">
-                                    Crea tu primer proyecto para empezar a buscar freelancers y recibir propuestas.
-                                </p>
-                                <Link href="/projects/new">
-                                    <Button className="bg-[#FF5C5C] hover:bg-[#FF5C5C]/90 text-white">
-                                        Crear Primer Proyecto
-                                    </Button>
-                                </Link>
-                            </div>
+                        <Card>
+                            <EmptyState
+                                icon={FolderOpen}
+                                title="Sin proyectos aún"
+                                description="Crea tu primer proyecto para empezar a buscar freelancers y recibir propuestas."
+                                actionLabel="Crear Primer Proyecto"
+                                actionHref="/projects/new"
+                            />
                         </Card>
                     ) : (
                         <div className="grid gap-6">

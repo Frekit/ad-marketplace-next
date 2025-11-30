@@ -9,9 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Star, MapPin, Search, DollarSign, Plus, Briefcase, ArrowRight, Loader2 } from "lucide-react";
+import { Star, MapPin, Search, DollarSign, Plus, Briefcase, ArrowRight, Loader2, Users } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
+import { EmptyState, EmptySearchResults } from "@/components/empty-state";
 
 type Freelancer = {
     id: string;
@@ -191,9 +192,17 @@ export default function FreelancersPage() {
                         </div>
                     ) : filteredFreelancers.length === 0 ? (
                         <Card>
-                            <CardContent className="py-12 text-center text-muted-foreground">
-                                <p>No se encontraron freelancers que coincidan con tu búsqueda.</p>
-                            </CardContent>
+                            {searchTerm ? (
+                                <EmptySearchResults query={searchTerm} />
+                            ) : freelancers.length === 0 ? (
+                                <EmptyState
+                                    icon={Users}
+                                    title="No hay freelancers disponibles"
+                                    description="Actualmente no hay freelancers registrados en la plataforma."
+                                />
+                            ) : (
+                                <EmptySearchResults query={searchTerm} />
+                            )}
                         </Card>
                     ) : (
                         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

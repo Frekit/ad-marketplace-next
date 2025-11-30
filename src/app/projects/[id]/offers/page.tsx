@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Briefcase, Calendar, Euro, CheckCircle, XCircle, Clock } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { EmptyState } from "@/components/empty-state"
 
 type Milestone = {
     id: string
@@ -197,20 +198,12 @@ export default function ProjectOffersPage({ params }: { params: { id: string } }
                         </h2>
 
                         {offers.length === 0 ? (
-                            <Card className="p-12">
-                                <div className="flex flex-col items-center justify-center text-center">
-                                    <div className="mb-6">
-                                        <div className="inline-flex items-center justify-center w-24 h-24 bg-gray-100 rounded-full mb-4">
-                                            <Briefcase className="h-12 w-12 text-gray-400" />
-                                        </div>
-                                    </div>
-                                    <h3 className="text-xl font-bold text-gray-900 mb-2">
-                                        Aún no hay ofertas
-                                    </h3>
-                                    <p className="text-gray-600 max-w-md">
-                                        Cuando los freelancers envíen sus ofertas, aparecerán aquí para que las revises.
-                                    </p>
-                                </div>
+                            <Card>
+                                <EmptyState
+                                    icon={Briefcase}
+                                    title="Aún no hay ofertas"
+                                    description="Cuando los freelancers envíen sus ofertas, aparecerán aquí para que las revises."
+                                />
                             </Card>
                         ) : (
                             <div className="space-y-6">

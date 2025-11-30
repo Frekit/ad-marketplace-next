@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { formatCurrency, getStatusLabel, getStatusBadgeColor } from '@/lib/invoice-utils';
+import { EmptyInvoices } from '@/components/empty-state';
 
 interface Invoice {
     id: string;
@@ -104,10 +105,14 @@ export default function InvoiceList({ initialInvoices = [] }: InvoiceListProps) 
 
             {/* Invoices Table */}
             {filteredInvoices.length === 0 ? (
-                <div className="bg-white p-8 rounded-lg shadow text-center">
-                    <p className="text-gray-600">
-                        {invoices.length === 0 ? 'No tienes facturas aún.' : 'No hay facturas con el estado seleccionado.'}
-                    </p>
+                <div className="bg-white rounded-lg shadow">
+                    {invoices.length === 0 ? (
+                        <EmptyInvoices />
+                    ) : (
+                        <div className="p-8 text-center">
+                            <p className="text-gray-600">No hay facturas con el estado seleccionado.</p>
+                        </div>
+                    )}
                 </div>
             ) : (
                 <div className="bg-white rounded-lg shadow overflow-hidden">

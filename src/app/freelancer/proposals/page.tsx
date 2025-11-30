@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Briefcase, Clock, Euro, AlertCircle } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
+import { EmptyProposals } from "@/components/empty-state"
 
 type Proposal = {
     id: string
@@ -119,25 +120,8 @@ export default function FreelancerProposalsPage() {
                             <p className="text-gray-600 mt-4">Cargando propuestas...</p>
                         </div>
                     ) : proposals.length === 0 ? (
-                        <Card className="p-12">
-                            <div className="flex flex-col items-center justify-center text-center">
-                                <div className="mb-6">
-                                    <div className="inline-flex items-center justify-center w-24 h-24 bg-gray-100 rounded-full mb-4">
-                                        <Briefcase className="h-12 w-12 text-gray-400" />
-                                    </div>
-                                </div>
-                                <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                                    No tienes propuestas aún
-                                </h2>
-                                <p className="text-gray-600 max-w-md mb-8">
-                                    Cuando un cliente te invite a un proyecto, aparecerá aquí. Podrás revisar los detalles y enviar tu oferta con tus hitos y precios.
-                                </p>
-                                <Link href="/dashboard/freelancer">
-                                    <Button className="bg-[#FF5C5C] hover:bg-[#FF5C5C]/90 text-white">
-                                        Volver al Dashboard
-                                    </Button>
-                                </Link>
-                            </div>
+                        <Card>
+                            <EmptyProposals />
                         </Card>
                     ) : (
                         <div className="space-y-4">

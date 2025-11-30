@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { FolderOpen, Calendar, DollarSign, Briefcase, AlertCircle } from "lucide-react"
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import { EmptyProjects } from "@/components/empty-state"
 
 type Project = {
     id: string;
@@ -129,25 +130,8 @@ export default function FreelancerProjectsPage() {
                     )}
 
                     {projects.length === 0 ? (
-                        <Card className="p-12">
-                            <div className="flex flex-col items-center justify-center text-center">
-                                <div className="mb-6">
-                                    <div className="inline-flex items-center justify-center w-24 h-24 bg-gray-100 rounded-full mb-4">
-                                        <FolderOpen className="h-12 w-12 text-gray-400" />
-                                    </div>
-                                </div>
-                                <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                                    ¡Sin proyectos, por ahora!
-                                </h2>
-                                <p className="text-gray-600 max-w-md mb-8">
-                                    Aquí podrás ver y gestionar tus proyectos con los clientes. Cuando recibas tu primera propuesta de proyecto o un cliente te contrate, aparecerá aquí.
-                                </p>
-                                <Link href="/freelancer/proposals">
-                                    <Button className="bg-[#FF5C5C] hover:bg-[#FF5C5C]/90 text-white">
-                                        Ver Propuestas Disponibles
-                                    </Button>
-                                </Link>
-                            </div>
+                        <Card>
+                            <EmptyProjects />
                         </Card>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
