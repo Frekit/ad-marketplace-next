@@ -201,12 +201,34 @@ export default function ProposalDetailsPage({ params }: { params: Promise<{ id: 
         }
     }
 
-    const handleNegotiateProposal = () => {
-        if (!proposal?.proposal.conversation_id) {
-            setError("Error: No hay conversación disponible para negociar")
+    const handleNegotiateProposal = async () => {
+        if (!proposal) {
+            setError("Error: Propuesta no cargada")
             return
         }
-        router.push(`/conversations/${proposal.proposal.conversation_id}`)
+
+        setSubmitting(true)
+        try {
+            const res = await fetch(`/api/freelancer/proposals/${proposal.id}/negotiate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+
+            const data = await res.json()
+
+            if (!res.ok) {
+                setError(data.error || "Error al iniciar negociación")
+                return
+            }
+
+            // Redirect to conversation
+            router.push(`/conversations/${data.conversation_id}`)
+        } catch (error) {
+            console.error('Error negotiating:', error)
+            setError("Error al iniciar negociación")
+        } finally {
+            setSubmitting(false)
+        }
     }
 
     const handleSubmitOffer = async () => {
@@ -456,11 +478,13 @@ export default function ProposalDetailsPage({ params }: { params: Promise<{ id: 
                                     {/* Negotiate Option */}
                                     <button
                                         onClick={handleNegotiateProposal}
-                                        className="p-4 border-2 border-blue-200 rounded-lg hover:bg-blue-50 transition-colors flex flex-col items-center gap-2 text-center"
+                                        disabled={submitting}
+                                        className="p-4 border-2 border-blue-200 rounded-lg hover:bg-blue-50 transition-colors flex flex-col items-center gap-2 text-center disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         <MessageSquare className="h-8 w-8 text-blue-600" />
                                         <span className="font-semibold text-blue-900">Negociar</span>
                                         <span className="text-xs text-blue-700">Discute términos en el chat</span>
+                                        {submitting && <span className="text-xs text-gray-500">Abriendo chat...</span>}
                                     </button>
 
                                     {/* Reject Option */}
