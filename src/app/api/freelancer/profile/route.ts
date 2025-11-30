@@ -15,10 +15,10 @@ export async function GET(req: NextRequest) {
 
         const supabase = createClient();
 
-        // Get user basic info and freelancer profile
+        // Get user basic info including daily_rate
         const { data: user, error: userError } = await supabase
             .from('users')
-            .select('id, email, first_name, last_name')
+            .select('id, email, first_name, last_name, daily_rate')
             .eq('id', session.user.id)
             .single();
 
@@ -81,13 +81,18 @@ export async function PUT(req: NextRequest) {
         const { first_name, last_name, bio, hourly_rate, skills, availability } = body;
 
         // Update user basic info if provided
-        if (first_name || last_name) {
+        if (first_name || last_name || hourly_rate !== undefined) {
+            const updateData: any = {};
+            if (first_name) updateData.first_name = first_name;
+            if (last_name) updateData.last_name = last_name;
+            if (hourly_rate !== undefined) {
+                // Save hourly_rate (which represents daily rate now) to the users table
+                updateData.daily_rate = hourly_rate ? parseFloat(hourly_rate) : null;
+            }
+
             const { error: updateUserError } = await supabase
                 .from('users')
-                .update({
-                    ...(first_name && { first_name }),
-                    ...(last_name && { last_name }),
-                })
+                .update(updateData)
                 .eq('id', session.user.id);
 
             if (updateUserError) {

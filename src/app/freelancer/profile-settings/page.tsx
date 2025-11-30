@@ -212,15 +212,15 @@ export default function FreelancerProfileSettings() {
                             <div className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Tarifa horaria (€/hora)
+                                        Tarifa diaria (€/día)
                                     </label>
                                     <div className="relative">
                                         <span className="absolute left-3 top-3 text-gray-500">€</span>
                                         <Input
                                             type="number"
-                                            min="5"
-                                            max="500"
-                                            step="0.5"
+                                            min="20"
+                                            max="5000"
+                                            step="1"
                                             value={formData.hourly_rate}
                                             onChange={(e) =>
                                                 setFormData({
@@ -228,12 +228,12 @@ export default function FreelancerProfileSettings() {
                                                     hourly_rate: e.target.value,
                                                 })
                                             }
-                                            placeholder="25"
+                                            placeholder="100"
                                             className="pl-7"
                                         />
                                     </div>
                                     <p className="text-xs text-gray-500 mt-1">
-                                        Mínimo recomendado: €5/hora
+                                        Esta tarifa se usará para comparar propuestas. Mínimo recomendado: €20/día
                                     </p>
                                 </div>
 

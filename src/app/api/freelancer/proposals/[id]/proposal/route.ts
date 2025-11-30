@@ -38,6 +38,12 @@ export async function GET(
       console.error('Error fetching freelancer verification status:', freelancerError);
     }
 
+    console.log('Freelancer data:', {
+      id: session.user.id,
+      freelancerData,
+      freelancerError
+    });
+
     // Get the invitation for this freelancer (which may or may not have a proposal yet)
     const { data: invitation, error: invitationError } = await supabase
       .from('project_invitations')
@@ -105,16 +111,27 @@ export async function GET(
       ? proposalDetails.original_total_budget / proposalDetails.original_estimated_days
       : null;
 
-    const freelancerDailyRate = freelancerData?.daily_rate || 0;
-    const priceDifference = pricePerDay && freelancerDailyRate
+    // Get the freelancer's daily rate, handling null and undefined safely
+    const dailyRateValue = freelancerData?.daily_rate;
+    const freelancerDailyRate = typeof dailyRateValue === 'number' && dailyRateValue > 0
+      ? dailyRateValue
+      : null;
+
+    const priceDifference = pricePerDay && freelancerDailyRate && freelancerDailyRate > 0
       ? ((pricePerDay - freelancerDailyRate) / freelancerDailyRate) * 100
       : null;
+
+    console.log('Rate calculation:', {
+      pricePerDay,
+      freelancerDailyRate,
+      priceDifference
+    });
 
     // Construct response
     const responseData = {
       id: proposal.id,
       verification_status: freelancerData?.verification_status || 'pending',
-      freelancer_daily_rate: freelancerDailyRate,
+      freelancer_daily_rate: freelancerDailyRate || null,
       proposal: {
         id: proposalDetails?.id || proposal.id,
         project_id: proposal.project_id,
