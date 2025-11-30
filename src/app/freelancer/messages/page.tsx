@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import FreelancerLayout from "@/components/layouts/FreelancerLayout"
 import ConversationItem from "@/components/messaging/conversation-item"
 import MessageBubble from "@/components/messaging/message-bubble"
@@ -41,6 +41,9 @@ interface Conversation {
 
 export default function FreelancerMessagesPage() {
     const router = useRouter()
+    const searchParams = useSearchParams()
+    const freelancerId = searchParams.get('freelancer_id')
+
     const { data: session, status } = useSession({
         required: true,
         onUnauthenticated() {
@@ -62,6 +65,20 @@ export default function FreelancerMessagesPage() {
             fetchConversations()
         }
     }, [session?.user?.id])
+
+    // If freelancer_id is in URL, find or create conversation with that freelancer
+    useEffect(() => {
+        if (freelancerId && conversations.length > 0) {
+            // Try to find existing conversation with this freelancer
+            const existingConversation = conversations.find(conv => conv.other_participant.id === freelancerId)
+            if (existingConversation) {
+                setSelectedConversationId(existingConversation.id)
+            } else {
+                // If no conversation exists, create one
+                createConversation(freelancerId)
+            }
+        }
+    }, [freelancerId, conversations])
 
     useEffect(() => {
         if (selectedConversationId) {
@@ -119,6 +136,31 @@ export default function FreelancerMessagesPage() {
             console.error("Error fetching messages:", err)
         } finally {
             setLoadingMessages(false)
+        }
+    }
+
+    const createConversation = async (otherUserId: string) => {
+        try {
+            const res = await fetch("/api/conversations", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    participant_id: otherUserId
+                })
+            })
+
+            if (!res.ok) {
+                throw new Error("Failed to create conversation")
+            }
+
+            const data = await res.json()
+            if (data.conversation_id) {
+                setSelectedConversationId(data.conversation_id)
+                await fetchConversations()
+            }
+        } catch (err) {
+            console.error("Error creating conversation:", err)
+            setError(err instanceof Error ? err.message : "Error creating conversation")
         }
     }
 

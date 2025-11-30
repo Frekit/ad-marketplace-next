@@ -90,7 +90,7 @@ export default async function FreelancerProfilePage({ params }: { params: Promis
                             <p className="text-lg mb-6 max-w-3xl">{freelancer.bio}</p>
 
                             <div className="flex gap-3">
-                                <Link href="/messages">
+                                <Link href={`/messages?freelancer_id=${freelancer.id}`}>
                                     <Button size="lg" className="gap-2">
                                         <MessageCircle className="h-4 w-4" />
                                         Contact Me
