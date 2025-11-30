@@ -9,7 +9,32 @@ const config: Config = {
     "./node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        // Brand Colors
+        primary: '#FF5C5C',
+        secondary: '#0F4C5C',
+        accent: '#5b65ff',
+
+        // Semantic Colors
+        success: '#17c964',
+        warning: '#f5a524',
+        danger: '#f31260',
+        info: '#0F4C5C',
+
+        // Neutral Colors (Dark Mode)
+        background: '#0a0b0f',
+        surface: '#141820',
+        'surface-hover': '#1a1f2e',
+        muted: '#2a2f3f',
+        border: '#3a3f4f',
+
+        // Text Colors
+        text: '#ffffff',
+        'text-secondary': '#d9d9da',
+        'text-muted': '#8c8c90',
+      },
+    },
   },
   darkMode: "class",
   plugins: [
