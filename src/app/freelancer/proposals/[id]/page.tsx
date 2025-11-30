@@ -351,19 +351,19 @@ export default function ProposalDetailsPage({ params }: { params: Promise<{ id: 
                                     <p className="text-sm text-gray-600 mb-1">Duración</p>
                                     <p className="font-semibold text-lg flex items-center gap-2">
                                         <Calendar className="h-4 w-4 text-gray-400" />
-                                        {proposal.proposal.duration} días
+                                        {proposal.proposal.duration ? `${proposal.proposal.duration} días` : 'Por definir'}
                                     </p>
                                 </div>
                                 <div>
                                     <p className="text-sm text-gray-600 mb-1">Tarifa Horaria</p>
                                     <p className="font-semibold text-lg flex items-center gap-2">
                                         <Euro className="h-4 w-4 text-gray-400" />
-                                        €{proposal.proposal.hourly_rate}/hora
+                                        {proposal.proposal.hourly_rate ? `€${proposal.proposal.hourly_rate}/hora` : 'Por definir'}
                                     </p>
                                 </div>
                                 <div>
                                     <p className="text-sm text-gray-600 mb-1">Total</p>
-                                    <p className="font-semibold text-lg text-[#0F4C5C]">€{proposal.proposal.total_amount.toFixed(2)}</p>
+                                    <p className="font-semibold text-lg text-[#0F4C5C]">€{proposal.proposal.total_amount ? proposal.proposal.total_amount.toFixed(2) : '0.00'}</p>
                                 </div>
                             </div>
 

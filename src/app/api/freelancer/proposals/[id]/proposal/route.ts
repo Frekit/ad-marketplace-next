@@ -109,13 +109,14 @@ export async function GET(
         project_id: proposal.project_id,
         freelancer_id: proposal.freelancer_id,
         client_id: proposal.client_id,
-        duration: proposalDetails?.original_estimated_days,
-        hourly_rate: proposalDetails?.original_hourly_rate,
-        total_amount: proposalDetails?.original_total_budget,
+        duration: proposalDetails?.original_estimated_days || null,
+        hourly_rate: proposalDetails?.original_hourly_rate || null,
+        total_amount: proposalDetails?.original_total_budget || 0,
         status: proposalDetails?.status || proposal.status,
         milestones: proposalDetails?.original_suggested_milestones || [],
         created_at: proposalDetails?.created_at || proposal.created_at,
-        conversation_id: proposalDetails?.conversation_id
+        conversation_id: proposalDetails?.conversation_id || null,
+        has_proposal: !!proposalDetails
       },
       project: proposal.projects || {
         id: proposal.project_id,
