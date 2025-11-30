@@ -97,14 +97,14 @@ export default function ProposalDetailsPage({ params }: { params: Promise<{ id: 
             return
         }
         try {
-            const res = await fetch(`/api/freelancer/proposals/${id}`)
+            const res = await fetch(`/api/freelancer/proposals/${id}/proposal`)
             const data = await res.json()
 
             if (res.ok) {
-                setProposal(data.proposal)
+                setProposal(data as ProposalDetails)
             } else {
                 console.error('API Error:', res.status, data)
-                setError(`No se pudo cargar la propuesta: ${data.error || 'Error desconocido'} ${data.details ? `- ${data.details}` : ''}`)
+                setError(`No se pudo cargar la propuesta: ${data.error || 'Error desconocido'}`)
             }
         } catch (error) {
             console.error('Error fetching proposal:', error)
