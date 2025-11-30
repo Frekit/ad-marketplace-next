@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
 
         // Fetch ALL invitations for this freelancer with detailed info
         const { data: invitations, error } = await supabase
-            .from('project_invitations')
+            .from('invitations')
             .select('*')
             .eq('freelancer_id', freelancerId);
 

@@ -78,7 +78,7 @@ export async function POST(
 
         // Check if invitation already exists
         const { data: existing, error: existingError } = await supabase
-            .from('project_invitations')
+            .from('invitations')
             .select('id, status')
             .eq('project_id', projectId)
             .eq('freelancer_id', freelancerId);
@@ -92,7 +92,7 @@ export async function POST(
 
         // Create invitation with proposal terms
         const { data: invitation, error: invitationError } = await supabase
-            .from('project_invitations')
+            .from('invitations')
             .insert({
                 project_id: projectId,
                 freelancer_id: freelancerId,

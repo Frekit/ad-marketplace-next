@@ -41,13 +41,13 @@ export async function GET(
 
         // Fetch invitations for this project
         const { data: invitations, error } = await supabase
-            .from('project_invitations')
+            .from('invitations')
             .select(`
                 id,
                 status,
                 created_at,
                 message,
-                freelancer:users!project_invitations_freelancer_id_fkey (
+                freelancer:users!invitations_freelancer_id_fkey (
                     id,
                     first_name,
                     last_name,

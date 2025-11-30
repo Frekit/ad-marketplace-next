@@ -46,7 +46,7 @@ export async function GET(
 
     // Get the invitation for this freelancer (which may or may not have a proposal yet)
     const { data: invitation, error: invitationError } = await supabase
-      .from('project_invitations')
+      .from('invitations')
       .select(`
         id,
         status,
@@ -64,7 +64,7 @@ export async function GET(
           description,
           skills_required
         ),
-        users!project_invitations_client_id_fkey (
+        users!invitations_client_id_fkey (
           id,
           first_name,
           last_name,

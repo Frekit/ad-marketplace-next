@@ -37,7 +37,7 @@ export async function GET(
 
         // Fetch specific proposal with all related data using Supabase relations
         const { data: invitation, error } = await supabase
-            .from('project_invitations')
+            .from('invitations')
             .select(`
                 id,
                 status,
@@ -51,7 +51,7 @@ export async function GET(
                     allocated_budget,
                     created_at
                 ),
-                client:users!project_invitations_client_id_fkey (
+                client:users!invitations_client_id_fkey (
                     id,
                     first_name,
                     last_name,
@@ -73,7 +73,7 @@ export async function GET(
 
             // Try to fetch the invitation regardless of freelancer_id to see if it exists
             const { data: anyInvitation } = await supabase
-                .from('project_invitations')
+                .from('invitations')
                 .select('*')
                 .eq('id', id)
                 .single();

@@ -21,7 +21,7 @@ export async function POST(
 
         // Get the invitation
         const { data: invitation, error: invError } = await supabase
-            .from('project_invitations')
+            .from('invitations')
             .select('id, project_id, freelancer_id, client_id')
             .eq('id', invitationId)
             .eq('freelancer_id', session.user.id)
