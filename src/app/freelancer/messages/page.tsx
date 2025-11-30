@@ -145,7 +145,7 @@ export default function FreelancerMessagesPage() {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    participant_id: otherUserId
+                    other_user_id: otherUserId
                 })
             })
 
@@ -154,8 +154,8 @@ export default function FreelancerMessagesPage() {
             }
 
             const data = await res.json()
-            if (data.conversation_id) {
-                setSelectedConversationId(data.conversation_id)
+            if (data.conversation?.id) {
+                setSelectedConversationId(data.conversation.id)
                 await fetchConversations()
             }
         } catch (err) {
