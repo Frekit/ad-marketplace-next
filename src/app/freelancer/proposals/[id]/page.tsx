@@ -56,15 +56,17 @@ export default function ProposalDetailsPage({ params }: { params: { id: string }
     const fetchProposalDetails = async () => {
         try {
             const res = await fetch(`/api/freelancer/proposals/${params.id}`)
+            const data = await res.json()
+
             if (res.ok) {
-                const data = await res.json()
                 setProposal(data.proposal)
             } else {
-                setError("No se pudo cargar la propuesta")
+                console.error('API Error:', res.status, data)
+                setError(`No se pudo cargar la propuesta: ${data.error || 'Error desconocido'} ${data.details ? `- ${data.details}` : ''}`)
             }
         } catch (error) {
             console.error('Error fetching proposal:', error)
-            setError("Error al cargar la propuesta")
+            setError("Error al cargar la propuesta: " + (error instanceof Error ? error.message : String(error)))
         } finally {
             setLoading(false)
         }

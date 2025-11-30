@@ -36,11 +36,14 @@ export async function GET(
 
         if (error || !invitation) {
             console.error('Database error (invitation):', error);
+            console.error('Request params - id:', id, 'freelancer_id:', session.user.id);
             return NextResponse.json(
-                { error: 'Proposal not found' },
+                { error: 'Proposal not found', details: error?.message || 'Invitation not found' },
                 { status: 404 }
             );
         }
+
+        console.log('Invitation found:', { id: invitation.id, project_id: invitation.project_id, client_id: invitation.client_id });
 
         // Fetch project details separately
         const { data: project, error: projectError } = await supabase
@@ -51,6 +54,8 @@ export async function GET(
 
         if (projectError) {
             console.error('Database error (project):', projectError);
+        } else {
+            console.log('Project found:', { id: project?.id, title: project?.title });
         }
 
         // Fetch client details separately
@@ -62,6 +67,8 @@ export async function GET(
 
         if (clientError) {
             console.error('Database error (client):', clientError);
+        } else {
+            console.log('Client found:', { id: client?.id, name: client?.first_name });
         }
 
         const clientData = client;
