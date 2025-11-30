@@ -44,12 +44,12 @@ export default function SignInPage() {
     };
 
     return (
-        <div className="flex items-center justify-center min-h-screen py-12 px-4 bg-gradient-to-br from-background via-muted/50 to-background relative overflow-hidden">
+        <div className="flex items-center justify-center min-h-screen py-12 px-4 bg-gradient-to-br from-background via-background to-muted/20 relative overflow-hidden">
             {/* Ambient Background Elements */}
             <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute bottom-[-20%] left-[-10%] w-[500px] h-[500px] bg-secondary/5 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-[-20%] left-[-10%] w-[500px] h-[500px] bg-accent/5 rounded-full blur-3xl pointer-events-none" />
 
-            <Card className="max-w-md w-full border-muted/60 shadow-xl bg-card/80 backdrop-blur-sm relative z-10">
+            <Card className="max-w-md w-full border border-white/10 shadow-2xl bg-white/5 backdrop-blur-xl relative z-10">
                 <CardHeader className="space-y-1 text-center">
                     <CardTitle className="text-2xl font-bold tracking-tight">Welcome back</CardTitle>
                     <CardDescription>
@@ -112,7 +112,7 @@ export default function SignInPage() {
                         </Button>
                     </form>
                 </CardContent>
-                <CardFooter className="flex flex-col space-y-4 text-center border-t bg-muted/20 p-6">
+                <CardFooter className="flex flex-col space-y-4 text-center border-t border-white/10 bg-white/5 p-6">
                     <div className="text-sm text-muted-foreground">
                         Don't have an account?{" "}
                         <Link href="/sign-up" className="text-primary font-medium hover:underline transition-all">

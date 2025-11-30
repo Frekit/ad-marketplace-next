@@ -63,15 +63,15 @@ export default function FreelancerProjectsPage() {
     const getStatusColor = (status: string) => {
         switch (status) {
             case 'active':
-                return 'bg-blue-100 text-blue-700'
+                return 'bg-accent/30 text-accent'
             case 'completed':
-                return 'bg-green-100 text-green-700'
+                return 'bg-success/30 text-success'
             case 'paused':
-                return 'bg-yellow-100 text-yellow-700'
+                return 'bg-warning/30 text-warning'
             case 'cancelled':
-                return 'bg-red-100 text-red-700'
+                return 'bg-danger/30 text-danger'
             default:
-                return 'bg-gray-100 text-gray-700'
+                return 'bg-muted text-text-muted'
         }
     }
 
@@ -90,7 +90,7 @@ export default function FreelancerProjectsPage() {
             <FreelancerLayout>
                 <div className="p-8">
                     <div className="max-w-5xl mx-auto">
-                        <h1 className="text-3xl font-bold text-gray-900 mb-8">Mis Proyectos</h1>
+                        <h1 className="text-3xl font-bold text-text mb-8">Mis Proyectos</h1>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <SkeletonList count={4} />
                         </div>
@@ -104,24 +104,24 @@ export default function FreelancerProjectsPage() {
         <FreelancerLayout>
             <div className="p-8">
                 <div className="max-w-5xl mx-auto">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-8">Mis Proyectos</h1>
+                    <h1 className="text-3xl font-bold text-text mb-8">Mis Proyectos</h1>
 
                     {/* Verification Reminder Banner */}
                     {verificationStatus && verificationStatus !== 'approved' && (
-                        <Card className="mb-6 border-l-4 border-l-orange-500 bg-orange-50">
+                        <Card className="mb-6 border-l-4 border-l-warning bg-warning/10">
                             <div className="p-4 flex items-start gap-3">
-                                <AlertCircle className="h-5 w-5 text-orange-600 flex-shrink-0 mt-0.5" />
+                                <AlertCircle className="h-5 w-5 text-warning flex-shrink-0 mt-0.5" />
                                 <div className="flex-1">
-                                    <h3 className="font-semibold text-orange-900 mb-1">
+                                    <h3 className="font-semibold text-warning mb-1">
                                         Verificación Pendiente
                                     </h3>
-                                    <p className="text-sm text-orange-800 mb-3">
+                                    <p className="text-sm text-text-muted mb-3">
                                         {verificationStatus === 'pending' && 'Aún no has iniciado tu verificación. Complétala para poder aceptar trabajos en la plataforma.'}
                                         {verificationStatus === 'submitted' && 'Tu verificación está en revisión. Te notificaremos cuando sea aprobada.'}
                                         {verificationStatus === 'rejected' && 'Tu verificación fue rechazada. Por favor, revisa los requisitos e intenta de nuevo.'}
                                     </p>
                                     <Link href="/freelancer/verification">
-                                        <Button size="sm" className="bg-orange-600 hover:bg-orange-700 text-white">
+                                        <Button size="sm" className="bg-warning hover:bg-warning/90 text-white">
                                             Ir a Verificación
                                         </Button>
                                     </Link>
@@ -146,18 +146,18 @@ export default function FreelancerProjectsPage() {
                                     </CardHeader>
                                     <CardContent className="space-y-4">
                                         {project.description && (
-                                            <p className="text-sm text-muted-foreground line-clamp-2">
+                                            <p className="text-sm text-text-muted line-clamp-2">
                                                 {project.description}
                                             </p>
                                         )}
 
                                         <div className="space-y-2">
                                             <div className="flex items-center gap-2">
-                                                <DollarSign className="h-4 w-4 text-[#FF5C5C]" />
-                                                <span className="font-semibold">€{project.allocated_budget}</span>
+                                                <DollarSign className="h-4 w-4 text-primary" />
+                                                <span className="font-semibold text-text">€{project.allocated_budget}</span>
                                             </div>
                                             {project.deadline && (
-                                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                <div className="flex items-center gap-2 text-sm text-text-muted">
                                                     <Calendar className="h-4 w-4" />
                                                     {new Date(project.deadline).toLocaleDateString('es-ES')}
                                                 </div>
@@ -171,7 +171,7 @@ export default function FreelancerProjectsPage() {
                                                 </Button>
                                             </Link>
                                             <Link href={`/contracts/${project.id}`} className="flex-1">
-                                                <Button size="sm" className="w-full bg-[#FF5C5C] hover:bg-[#FF5C5C]/90">
+                                                <Button size="sm" className="w-full bg-primary hover:bg-primary/90">
                                                     Contrato
                                                 </Button>
                                             </Link>

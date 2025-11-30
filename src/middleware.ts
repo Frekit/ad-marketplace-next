@@ -1,10 +1,37 @@
+import { auth } from '@/auth';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 /**
- * Security middleware that adds security headers and handles CORS
+ * Security middleware that adds security headers, handles CORS, and protects routes
  */
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
+    // Protected routes that require authentication
+    const protectedRoutes = [
+        '/dashboard',
+        '/freelancer',
+        '/client',
+        '/admin',
+        '/messages',
+        '/inbox',
+        '/wallet',
+        '/profile',
+        '/projects',
+        '/orders',
+        '/contracts',
+        '/onboarding',
+    ];
+
+    const pathname = request.nextUrl.pathname;
+    const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
+
+    if (isProtectedRoute) {
+        const session = await auth();
+        if (!session?.user) {
+            return NextResponse.redirect(new URL('/sign-in', request.url));
+        }
+    }
+
     const response = NextResponse.next();
 
     // Security Headers

@@ -25,6 +25,8 @@ type Stats = {
     totalProjects: number
     totalFreelancers: number
     totalClients: number
+    pendingVerifications: number
+    verificationRequests: any[]
     invoiceStatus: {
         pending: number
         approved: number
@@ -266,7 +268,42 @@ export default function AdminDashboard() {
                 )}
 
                 {/* Quick Actions */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+                    <Card className="border-l-4 border-l-orange-500">
+                        <CardHeader>
+                            <CardTitle>Verificaciones</CardTitle>
+                            <CardDescription>Aprobar documentos de freelancers</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            {stats && stats.pendingVerifications > 0 && (
+                                <div className="mb-3 p-2 bg-orange-500/10 rounded-lg">
+                                    <p className="text-sm font-medium text-orange-700">
+                                        {stats.pendingVerifications} pendiente{stats.pendingVerifications !== 1 ? 's' : ''}
+                                    </p>
+                                </div>
+                            )}
+                            <Link href="/admin/verifications">
+                                <Button className="w-full bg-orange-600 hover:bg-orange-700">
+                                    Ver Verificaciones
+                                </Button>
+                            </Link>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="border-l-4 border-l-purple-500">
+                        <CardHeader>
+                            <CardTitle>Proyectos</CardTitle>
+                            <CardDescription>Gestiona todos los proyectos</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <Link href="/admin/projects">
+                                <Button className="w-full bg-purple-600 hover:bg-purple-700">
+                                    Ver Proyectos
+                                </Button>
+                            </Link>
+                        </CardContent>
+                    </Card>
+
                     <Card>
                         <CardHeader>
                             <CardTitle>Invoices</CardTitle>
@@ -288,7 +325,7 @@ export default function AdminDashboard() {
                         </CardHeader>
                         <CardContent>
                             <Link href="/admin/users">
-                                <Button className="w-full bg-purple-600 hover:bg-purple-700">
+                                <Button className="w-full bg-indigo-600 hover:bg-indigo-700">
                                     Ver Usuarios
                                 </Button>
                             </Link>

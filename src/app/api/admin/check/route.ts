@@ -1,38 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { createClient } from '@/lib/supabase';
 
 export async function GET(req: NextRequest) {
     try {
         const session = await auth();
 
-        if (!session?.user?.email) {
+        if (!session?.user) {
             return NextResponse.json(
-                { error: 'Unauthorized' },
-                { status: 401 }
+                { isAdmin: false },
+                { status: 200 }
             );
         }
 
-        const supabase = createClient();
-
-        // Check if user is admin
-        const { data: adminUser, error } = await supabase
-            .from('admin_users')
-            .select('id, email, name, role, permissions, is_active')
-            .eq('email', session.user.email)
-            .eq('is_active', true)
-            .single();
-
-        if (error || !adminUser) {
-            return NextResponse.json({
-                isAdmin: false,
-                admin: null,
-            });
-        }
+        // Check if user has admin role
+        const isAdmin = session.user.role === 'admin';
 
         return NextResponse.json({
-            isAdmin: true,
-            admin: adminUser,
+            isAdmin,
+            user: isAdmin ? {
+                email: session.user.email,
+                name: session.user.name,
+            } : null
         });
 
     } catch (error: any) {

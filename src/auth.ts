@@ -35,21 +35,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                     return null
                 }
 
-                // Check if user is an admin
-                const { data: adminUser } = await supabase
-                    .from("admin_users")
-                    .select("*")
-                    .eq("email", credentials.email)
-                    .single()
-
-                // If user is in admin_users table, set role to 'admin'
-                const userRole = adminUser ? "admin" : user.role
-
                 return {
                     id: user.id,
                     email: user.email,
                     name: `${user.first_name} ${user.last_name}`,
-                    role: userRole,
+                    role: user.role, // Use role directly from users table
                     companyName: user.company_name,
                 }
             },

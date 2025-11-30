@@ -1,3 +1,5 @@
+import { colors } from './colors';
+
 // Intentar cargar SendGrid, si no está disponible, usar fallback
 let sgMail: any = null;
 
@@ -66,10 +68,10 @@ export const emailTemplates = {
         <style>
           body { font-family: Arial, sans-serif; color: #333; }
           .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background-color: #0F4C5C; color: white; padding: 20px; text-align: center; border-radius: 8px; }
+          .header { background-color: ${colors.secondary}; color: white; padding: 20px; text-align: center; border-radius: 8px; }
           .content { margin: 20px 0; }
           .terms { background-color: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0; }
-          .button { display: inline-block; padding: 12px 24px; background-color: #0F4C5C; color: white; text-decoration: none; border-radius: 6px; margin-top: 20px; }
+          .button { display: inline-block; padding: 12px 24px; background-color: ${colors.primary}; color: white; text-decoration: none; border-radius: 6px; margin-top: 20px; }
           .footer { color: #999; font-size: 12px; margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; }
         </style>
       </head>
@@ -119,9 +121,9 @@ export const emailTemplates = {
         <style>
           body { font-family: Arial, sans-serif; color: #333; }
           .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background-color: #FF5C5C; color: white; padding: 20px; text-align: center; border-radius: 8px; }
+          .header { background-color: ${colors.primary}; color: white; padding: 20px; text-align: center; border-radius: 8px; }
           .content { margin: 20px 0; }
-          .button { display: inline-block; padding: 12px 24px; background-color: #0F4C5C; color: white; text-decoration: none; border-radius: 6px; margin-top: 20px; }
+          .button { display: inline-block; padding: 12px 24px; background-color: ${colors.secondary}; color: white; text-decoration: none; border-radius: 6px; margin-top: 20px; }
           .footer { color: #999; font-size: 12px; margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; }
         </style>
       </head>
@@ -161,10 +163,10 @@ export const emailTemplates = {
         <style>
           body { font-family: Arial, sans-serif; color: #333; }
           .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background-color: #4CAF50; color: white; padding: 20px; text-align: center; border-radius: 8px; }
+          .header { background-color: ${colors.success}; color: white; padding: 20px; text-align: center; border-radius: 8px; }
           .content { margin: 20px 0; }
-          .amount { background-color: #f5f5f5; padding: 20px; border-left: 4px solid #4CAF50; border-radius: 4px; margin: 20px 0; }
-          .button { display: inline-block; padding: 12px 24px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 6px; margin-top: 20px; }
+          .amount { background-color: #f5f5f5; padding: 20px; border-left: 4px solid ${colors.success}; border-radius: 4px; margin: 20px 0; }
+          .button { display: inline-block; padding: 12px 24px; background-color: ${colors.success}; color: white; text-decoration: none; border-radius: 6px; margin-top: 20px; }
           .footer { color: #999; font-size: 12px; margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; }
         </style>
       </head>
@@ -209,10 +211,10 @@ export const emailTemplates = {
         <style>
           body { font-family: Arial, sans-serif; color: #333; }
           .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background-color: #0F4C5C; color: white; padding: 20px; text-align: center; border-radius: 8px; }
+          .header { background-color: ${colors.secondary}; color: white; padding: 20px; text-align: center; border-radius: 8px; }
           .content { margin: 20px 0; }
-          .message { background-color: #f5f5f5; padding: 15px; border-left: 4px solid #0F4C5C; border-radius: 4px; margin: 20px 0; }
-          .button { display: inline-block; padding: 12px 24px; background-color: #0F4C5C; color: white; text-decoration: none; border-radius: 6px; margin-top: 20px; }
+          .message { background-color: #f5f5f5; padding: 15px; border-left: 4px solid ${colors.secondary}; border-radius: 4px; margin: 20px 0; }
+          .button { display: inline-block; padding: 12px 24px; background-color: ${colors.primary}; color: white; text-decoration: none; border-radius: 6px; margin-top: 20px; }
           .footer { color: #999; font-size: 12px; margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; }
         </style>
       </head>

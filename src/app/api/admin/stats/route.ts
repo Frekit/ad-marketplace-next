@@ -6,43 +6,40 @@ export async function GET(req: NextRequest) {
     try {
         const session = await auth()
 
-        if (!session?.user?.email) {
+        if (!session?.user) {
             return NextResponse.json(
                 { error: 'Unauthorized' },
                 { status: 401 }
             )
         }
 
-        const supabase = createClient()
-
-        // Verify admin access
-        const { data: adminUser, error: adminError } = await supabase
-            .from('admin_users')
-            .select('id')
-            .eq('email', session.user.email)
-            .eq('is_active', true)
-            .single()
-
-        if (adminError || !adminUser) {
+        // Verify admin role
+        if (session.user.role !== 'admin') {
             return NextResponse.json(
                 { error: 'Admin access required' },
                 { status: 403 }
             )
         }
 
+        const supabase = createClient()
+
         // Get all statistics in parallel
         const [
             { data: invoices } = {},
             { data: users } = {},
-            { count: totalProjects } = {},
+            { data: projects } = {},
             { data: freelancers } = {},
             { data: clients } = {},
+            { data: verificationRequests } = {},
         ] = await Promise.all([
             supabase.from('invoices').select('status, total_amount_eur'),
             supabase.from('users').select('id, role'),
-            supabase.from('projects').select('id', { count: 'exact', head: true }),
-            supabase.from('users').select('id', { count: 'exact', head: true }).eq('role', 'freelancer'),
-            supabase.from('users').select('id', { count: 'exact', head: true }).eq('role', 'client'),
+            supabase.from('projects').select('id'),
+            supabase.from('users').select('id').eq('role', 'freelancer'),
+            supabase.from('users').select('id').eq('role', 'client'),
+            supabase.from('users').select('id, email, first_name, last_name, verification_status, documents_submitted_at')
+                .eq('verification_status', 'submitted')
+                .order('documents_submitted_at', { ascending: false }),
         ])
 
         const totalInvoices = invoices?.length || 0
@@ -52,6 +49,10 @@ export async function GET(req: NextRequest) {
         const rejectedInvoices = invoices?.filter(i => i.status === 'rejected').length || 0
         const totalRevenue = invoices?.reduce((sum, i) => sum + (i.total_amount_eur || 0), 0) || 0
         const totalUsers = users?.length || 0
+        const totalProjects = projects?.length || 0
+        const totalFreelancers = freelancers?.length || 0
+        const totalClients = clients?.length || 0
+        const pendingVerifications = verificationRequests?.length || 0
 
         return NextResponse.json({
             totalInvoices,
@@ -62,8 +63,10 @@ export async function GET(req: NextRequest) {
             totalRevenue,
             totalUsers,
             totalProjects,
-            totalFreelancers: freelancers?.length || 0,
-            totalClients: clients?.length || 0,
+            totalFreelancers,
+            totalClients,
+            pendingVerifications,
+            verificationRequests: verificationRequests || [],
             invoiceStatus: {
                 pending: pendingInvoices,
                 approved: approvedInvoices,

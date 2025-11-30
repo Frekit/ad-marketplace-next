@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { auth } from "@/auth"
 import { createClient } from "@/lib/supabase"
 
 export async function PATCH(
@@ -6,25 +7,18 @@ export async function PATCH(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const supabase = createClient()
-        const { data: { session } } = await supabase.auth.getSession()
+        const session = await auth()
 
-        if (!session?.user?.email) {
+        if (!session?.user) {
             return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
         }
 
-        // Verify admin status
-        const { data: admin } = await supabase
-            .from("admin_users")
-            .select("*")
-            .eq("email", session.user.email)
-            .eq("is_active", true)
-            .single()
-
-        if (!admin) {
+        // Verify admin role
+        if (session.user.role !== 'admin') {
             return NextResponse.json({ error: "Not authorized" }, { status: 403 })
         }
 
+        const supabase = createClient()
         const body = await req.json()
         const { status } = body
 

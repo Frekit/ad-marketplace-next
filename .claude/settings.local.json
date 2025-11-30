@@ -14,7 +14,10 @@
       "Bash(pkill:*)",
       "Bash(npm install:*)",
       "WebSearch",
-      "Bash(pnpm install:*)"
+      "Bash(pnpm install:*)",
+      "Bash(git reset:*)",
+      "WebFetch(domain:www.heroui.com)",
+      "WebFetch(domain:orizon-template.webflow.io)"
     ],
     "deny": [],
     "ask": []
