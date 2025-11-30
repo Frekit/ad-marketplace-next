@@ -20,6 +20,18 @@ export async function middleware(request: NextRequest) {
         '/orders',
         '/contracts',
         '/onboarding',
+        '/freelancers',  // Browse freelancers requires authentication
+        '/gigs',         // Browse gigs requires authentication
+        '/my-info',      // User info requires authentication
+        '/payments',     // Payments requires authentication
+    ];
+
+    // Public routes that don't require authentication (can be accessed without logging in)
+    const publicRoutes = [
+        '/',
+        '/sign-in',
+        '/sign-up',
+        '/api/auth',  // Auth endpoints are public
     ];
 
     const pathname = request.nextUrl.pathname;
