@@ -9,6 +9,7 @@ import { FolderOpen, Plus, Eye, Edit2, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { EmptyState } from "@/components/empty-state"
+import { SkeletonList } from "@/components/skeleton"
 
 type Project = {
     id: string
@@ -106,8 +107,16 @@ export default function ClientProjectsPage() {
     if (loading) {
         return (
             <ClientLayout>
-                <div className="p-8 flex justify-center items-center min-h-screen">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF5C5C]"></div>
+                <div className="p-8">
+                    <div className="max-w-6xl mx-auto">
+                        <div className="flex items-center justify-between mb-8">
+                            <div>
+                                <h1 className="text-3xl font-bold text-gray-900">Mis Proyectos</h1>
+                                <p className="text-gray-600 mt-1">Gestiona tus proyectos y propuestas</p>
+                            </div>
+                        </div>
+                        <SkeletonList count={4} />
+                    </div>
                 </div>
             </ClientLayout>
         )

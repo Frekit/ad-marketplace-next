@@ -8,6 +8,7 @@ import { Briefcase, Clock, Euro, AlertCircle } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { EmptyProposals } from "@/components/empty-state"
+import { SkeletonList } from "@/components/skeleton"
 
 type Proposal = {
     id: string
@@ -115,10 +116,7 @@ export default function FreelancerProposalsPage() {
                     )}
 
                     {loading ? (
-                        <div className="text-center py-12">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF5C5C] mx-auto"></div>
-                            <p className="text-gray-600 mt-4">Cargando propuestas...</p>
-                        </div>
+                        <SkeletonList count={3} />
                     ) : proposals.length === 0 ? (
                         <Card>
                             <EmptyProposals />

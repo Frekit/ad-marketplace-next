@@ -1,4 +1,5 @@
-import type { Metadata } from "next";
+"use client"
+
 import { Geist, Geist_Mono } from "next/font/google";
 import { SessionProvider } from "next-auth/react";
 import { Toaster } from "@/components/toaster";
@@ -13,11 +14,6 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
-
-export const metadata: Metadata = {
-  title: "Freelance Marketplace",
-  description: "Premium freelance advertising marketplace",
-};
 
 export default function RootLayout({
   children,

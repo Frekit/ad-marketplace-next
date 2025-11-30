@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Briefcase, Calendar, Euro, CheckCircle, XCircle, Clock } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { EmptyState } from "@/components/empty-state"
+import { SkeletonCard, SkeletonList } from "@/components/skeleton"
 
 type Milestone = {
     id: string
@@ -130,8 +131,16 @@ export default function ProjectOffersPage({ params }: { params: { id: string } }
     if (loading) {
         return (
             <ClientLayout>
-                <div className="p-8 flex justify-center items-center min-h-screen">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF5C5C]"></div>
+                <div className="p-8">
+                    <div className="max-w-6xl mx-auto space-y-6">
+                        <div className="flex items-start justify-between mb-6">
+                            <div className="flex-1 space-y-4">
+                                <SkeletonCard />
+                            </div>
+                        </div>
+                        <SkeletonCard />
+                        <SkeletonList count={3} />
+                    </div>
                 </div>
             </ClientLayout>
         )

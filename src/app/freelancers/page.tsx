@@ -13,6 +13,7 @@ import { Star, MapPin, Search, DollarSign, Plus, Briefcase, ArrowRight, Loader2,
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { EmptyState, EmptySearchResults } from "@/components/empty-state";
+import { SkeletonFreelancerList } from "@/components/skeleton";
 
 type Freelancer = {
     id: string;
@@ -187,9 +188,7 @@ export default function FreelancersPage() {
 
                     {/* Results */}
                     {loadingFreelancers ? (
-                        <div className="flex items-center justify-center py-12">
-                            <Loader2 className="h-8 w-8 animate-spin text-[#FF5C5C]" />
-                        </div>
+                        <SkeletonFreelancerList count={6} />
                     ) : filteredFreelancers.length === 0 ? (
                         <Card>
                             {searchTerm ? (

@@ -17,10 +17,10 @@ export async function POST(
             );
         }
 
-        const supabase = createClient();
+        let supabase = createClient();
 
         // Check freelancer verification status
-        const { data: freelancer, error: freelancerError } = await supabase
+        const { data: freelancerData, error: freelancerError } = await supabase
             .from('users')
             .select('verification_status')
             .eq('id', session.user.id)
@@ -30,7 +30,7 @@ export async function POST(
             throw freelancerError;
         }
 
-        if (freelancer?.verification_status !== 'approved') {
+        if (freelancerData?.verification_status !== 'approved') {
             return NextResponse.json(
                 { error: 'You must be verified to submit offers. Please complete your verification first.' },
                 { status: 403 }
@@ -52,8 +52,6 @@ export async function POST(
                 { status: 400 }
             );
         }
-
-        const supabase = createClient();
 
         // Verify invitation exists and belongs to this freelancer
         const { data: invitation, error: invError } = await supabase
@@ -131,7 +129,7 @@ export async function POST(
             .eq('id', invitation.client_id)
             .single();
 
-        const { data: freelancer } = await supabase
+        const { data: freelancerInfo } = await supabase
             .from('users')
             .select('first_name, last_name')
             .eq('id', session.user.id)
@@ -143,11 +141,11 @@ export async function POST(
                 invitation.client_id,
                 client.email,
                 'proposal_response',
-                `${freelancer?.first_name} respondió a tu propuesta`,
-                `${freelancer?.first_name} ha enviado una oferta formal para "${(invitation.projects as any).title}"`,
+                `${freelancerInfo?.first_name} respondió a tu propuesta`,
+                `${freelancerInfo?.first_name} ha enviado una oferta formal para "${(invitation.projects as any).title}"`,
                 {
                     companyName: `${client.first_name} ${client.last_name}`.trim(),
-                    freelancerName: `${freelancer?.first_name} ${freelancer?.last_name}`.trim(),
+                    freelancerName: `${freelancerInfo?.first_name} ${freelancerInfo?.last_name}`.trim(),
                     projectTitle: (invitation.projects as any).title,
                     projectId: invitation.project_id,
                 }

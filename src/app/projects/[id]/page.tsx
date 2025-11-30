@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { CheckCircle, Clock, Euro, Calendar, Edit2, Sparkles, Loader2 } from "lucide-react"
 import AIMatchResults from "@/components/ai-match-results"
 import { useToast } from "@/hooks/use-toast"
+import { SkeletonCard, SkeletonList } from "@/components/skeleton"
 
 type Milestone = {
     id: number
@@ -170,8 +171,17 @@ export default function ProjectManagementPage({ params }: { params: Promise<{ id
     if (loading) {
         return (
             <ClientLayout>
-                <div className="p-8 flex justify-center items-center min-h-screen">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF5C5C]"></div>
+                <div className="p-8">
+                    <div className="max-w-5xl mx-auto space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                            <SkeletonCard />
+                            <SkeletonCard />
+                            <SkeletonCard />
+                            <SkeletonCard />
+                        </div>
+                        <SkeletonCard />
+                        <SkeletonList count={3} />
+                    </div>
                 </div>
             </ClientLayout>
         )

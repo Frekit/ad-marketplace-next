@@ -1,3 +1,14 @@
+Error: Turbopack build failed with 3 errors:
+./src/app/api/freelancer/proposals/[id]/offer/route.ts:134:23
+Ecmascript file had an error
+132 |             .single();
+133 |
+> 134 |         const { data: freelancer } = await supabase
+|                       ^^^^^^^^^^
+135 |             .from('users')
+136 |             .select('first_name, last_name')
+137 |             .eq('id', session.user.id)
+the name `freelancer` is defined multiple times
 # SQL Migrations - Complete List
 
 ## ⚠️ IMPORTANT - READ FIRST

@@ -8,6 +8,7 @@ import { FolderOpen, Calendar, DollarSign, Briefcase, AlertCircle } from "lucide
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { EmptyProjects } from "@/components/empty-state"
+import { SkeletonList } from "@/components/skeleton"
 
 type Project = {
     id: string;
@@ -90,8 +91,8 @@ export default function FreelancerProjectsPage() {
                 <div className="p-8">
                     <div className="max-w-5xl mx-auto">
                         <h1 className="text-3xl font-bold text-gray-900 mb-8">Mis Proyectos</h1>
-                        <div className="flex items-center justify-center py-12">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF5C5C]"></div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <SkeletonList count={4} />
                         </div>
                     </div>
                 </div>
