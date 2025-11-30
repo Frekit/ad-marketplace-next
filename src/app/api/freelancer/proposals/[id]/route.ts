@@ -16,7 +16,18 @@ export async function GET(
             );
         }
 
-        const { id } = await params;
+        // Get the ID from params - handle both Promise and direct access
+        const resolvedParams = await params;
+        const id = resolvedParams?.id;
+
+        if (!id) {
+            console.error('Missing proposal ID in params:', resolvedParams);
+            return NextResponse.json(
+                { error: 'Invalid proposal ID' },
+                { status: 400 }
+            );
+        }
+
         const supabase = createClient();
 
         // Fetch specific proposal with all related data using Supabase relations
