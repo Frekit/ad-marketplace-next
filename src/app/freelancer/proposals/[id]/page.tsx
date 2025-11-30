@@ -409,20 +409,20 @@ export default function ProposalDetailsPage({ params }: { params: Promise<{ id: 
                                         <div className="border-t pt-3 flex justify-between items-center">
                                             <span className="text-gray-700 font-semibold">Diferencia:</span>
                                             <span className={`font-bold text-lg ${
-                                                proposal.proposal.price_difference_percent >= 0
+                                                proposal.proposal.price_difference_percent !== null && proposal.proposal.price_difference_percent >= 0
                                                     ? 'text-green-600'
                                                     : 'text-red-600'
                                             }`}>
-                                                {proposal.proposal.price_difference_percent >= 0 ? '+' : ''}
+                                                {proposal.proposal.price_difference_percent !== null && proposal.proposal.price_difference_percent >= 0 ? '+' : ''}
                                                 {proposal.proposal.price_difference_percent?.toFixed(1)}%
                                             </span>
                                         </div>
-                                        {proposal.proposal.price_difference_percent < 0 && (
+                                        {proposal.proposal.price_difference_percent !== null && proposal.proposal.price_difference_percent < 0 && (
                                             <p className="text-xs text-red-600 mt-2">
                                                 ⚠️ Esta propuesta está por debajo de tu tarifa diaria configurada.
                                             </p>
                                         )}
-                                        {proposal.proposal.price_difference_percent > 0 && (
+                                        {proposal.proposal.price_difference_percent !== null && proposal.proposal.price_difference_percent > 0 && (
                                             <p className="text-xs text-green-600 mt-2">
                                                 ✓ Esta propuesta está por encima de tu tarifa diaria configurada.
                                             </p>
