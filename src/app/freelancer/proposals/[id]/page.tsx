@@ -51,8 +51,12 @@ export default function ProposalDetailsPage({ params }: { params: { id: string }
 
     useEffect(() => {
         const id = params?.id
+        console.log('ProposalDetailsPage - useEffect executing with id:', id)
         if (id) {
             fetchProposalDetails(id)
+        } else {
+            console.log('No ID found in params:', params)
+            setLoading(false)
         }
     }, [params])
 
