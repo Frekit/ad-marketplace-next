@@ -2,7 +2,7 @@
 
 import { Star } from "lucide-react"
 import { motion } from "framer-motion"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar } from "@heroui/react"
 
 const testimonials = [
     {
@@ -30,13 +30,13 @@ const testimonials = [
 
 export function TestimonialsSection() {
     return (
-        <section className="py-24 relative overflow-hidden">
+        <section className="py-24 relative overflow-hidden bg-background">
             {/* Background decoration */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
 
             <div className="container relative mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="text-center mb-16">
-                    <h2 className="text-3xl md:text-5xl font-bold mb-6 text-white">
+                    <h2 className="text-3xl md:text-5xl font-bold mb-6 text-text">
                         Lo que dicen nuestros clientes
                     </h2>
                 </div>
@@ -49,26 +49,27 @@ export function TestimonialsSection() {
                             whileInView={{ opacity: 1, scale: 1 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.5, delay: index * 0.1 }}
-                            className="p-8 rounded-2xl bg-card border border-border relative"
+                            className="p-8 rounded-2xl bg-surface border border-border relative hover:border-primary/50 transition-all shadow-lg"
                         >
                             <div className="flex gap-1 mb-6">
                                 {[...Array(5)].map((_, i) => (
-                                    <Star key={i} className="h-5 w-5 text-yellow-500 fill-yellow-500" />
+                                    <Star key={i} className="h-5 w-5 text-warning fill-warning" />
                                 ))}
                             </div>
 
-                            <p className="text-lg text-muted-foreground mb-8 italic">
+                            <p className="text-lg text-text-muted mb-8 italic">
                                 "{testimonial.content}"
                             </p>
 
                             <div className="flex items-center gap-4">
-                                <Avatar>
-                                    <AvatarImage src={testimonial.avatar} />
-                                    <AvatarFallback>{testimonial.initials}</AvatarFallback>
-                                </Avatar>
+                                <Avatar
+                                    src={testimonial.avatar}
+                                    name={testimonial.initials}
+                                    size="md"
+                                />
                                 <div>
-                                    <h4 className="font-semibold text-white">{testimonial.author}</h4>
-                                    <p className="text-sm text-muted-foreground">{testimonial.role}</p>
+                                    <h4 className="font-semibold text-text">{testimonial.author}</h4>
+                                    <p className="text-sm text-text-muted">{testimonial.role}</p>
                                 </div>
                             </div>
                         </motion.div>

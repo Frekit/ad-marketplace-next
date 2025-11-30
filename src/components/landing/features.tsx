@@ -38,14 +38,14 @@ const features = [
 
 export function FeaturesSection() {
     return (
-        <section className="py-24 bg-black/20 relative">
+        <section className="py-24 bg-surface relative" id="features">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="text-center max-w-3xl mx-auto mb-16">
-                    <h2 className="text-3xl md:text-5xl font-bold mb-6 text-white">
+                    <h2 className="text-3xl md:text-5xl font-bold mb-6 text-text">
                         Todo lo que necesitas para <br />
                         <span className="text-primary">contratar con confianza</span>
                     </h2>
-                    <p className="text-lg text-muted-foreground">
+                    <p className="text-lg text-text-muted">
                         Hemos eliminado la fricción del proceso de contratación para que puedas enfocarte en crecer.
                     </p>
                 </div>
@@ -58,13 +58,13 @@ export function FeaturesSection() {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.5, delay: index * 0.1 }}
-                            className="p-8 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors group"
+                            className="p-8 rounded-2xl bg-background border border-border hover:border-primary/50 transition-all group shadow-lg"
                         >
-                            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                            <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                                 <feature.icon className="h-6 w-6 text-primary" />
                             </div>
-                            <h3 className="text-xl font-semibold text-white mb-3">{feature.title}</h3>
-                            <p className="text-muted-foreground leading-relaxed">
+                            <h3 className="text-xl font-semibold text-text mb-3">{feature.title}</h3>
+                            <p className="text-text-muted leading-relaxed">
                                 {feature.description}
                             </p>
                         </motion.div>
