@@ -394,13 +394,13 @@ export default function ProposalDetailsPage({ params }: { params: Promise<{ id: 
                                 </div>
                             </div>
 
-                            {/* Comparison with freelancer rate */}
-                            {proposal.proposal.price_per_day && proposal.freelancer_daily_rate > 0 && (
-                                <div className="border-2 rounded-lg p-4 bg-gray-50">
+                            {/* Comparison with freelancer rate - only show if we have a valid price per day AND valid freelancer rate */}
+                            {proposal.proposal.price_per_day && proposal.freelancer_daily_rate && proposal.freelancer_daily_rate > 0 ? (
+                                <div className="border-2 border-border rounded-lg p-4 bg-surface">
                                     <div className="space-y-3">
                                         <div className="flex justify-between items-center">
                                             <span className="text-text-muted">Tu tarifa diaria:</span>
-                                            <span className="font-semibold text-lg text-text">€{proposal.freelancer_daily_rate?.toFixed(2) || '0.00'}</span>
+                                            <span className="font-semibold text-lg text-text">€{proposal.freelancer_daily_rate.toFixed(2)}</span>
                                         </div>
                                         <div className="flex justify-between items-center">
                                             <span className="text-text-muted">Tarifa propuesta:</span>
@@ -429,14 +429,13 @@ export default function ProposalDetailsPage({ params }: { params: Promise<{ id: 
                                         )}
                                     </div>
                                 </div>
-                            )}
-                            {!proposal.freelancer_daily_rate || proposal.freelancer_daily_rate <= 0 ? (
-                                <div className="border rounded-lg p-4 bg-yellow-50">
-                                    <p className="text-sm text-yellow-700">
+                            ) : (
+                                <div className="border border-warning rounded-lg p-4 bg-warning/10">
+                                    <p className="text-sm text-warning">
                                         ⚠️ Para ver la comparación con tu tarifa, por favor configúrala en tu perfil.
                                     </p>
                                 </div>
-                            ) : null}
+                            )}
 
                             {/* Milestones */}
                             {proposal.proposal.milestones && proposal.proposal.milestones.length > 0 && (
