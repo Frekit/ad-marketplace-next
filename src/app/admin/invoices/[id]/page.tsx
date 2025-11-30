@@ -38,6 +38,13 @@ export default async function AdminInvoiceDetailPage({
         );
     }
 
+    // Fetch associated withdrawal request if it exists
+    const { data: withdrawalRequest } = await supabase
+        .from('withdrawal_requests')
+        .select('*')
+        .eq('invoice_id', id)
+        .single();
+
     return (
         <div className="min-h-screen bg-gray-100 p-6">
             <div className="mb-6">
@@ -48,7 +55,7 @@ export default async function AdminInvoiceDetailPage({
                     ← Volver al panel de facturas
                 </Link>
             </div>
-            <AdminInvoiceDetail invoice={invoice} />
+            <AdminInvoiceDetail invoice={invoice} withdrawalRequest={withdrawalRequest || null} />
         </div>
     );
 }

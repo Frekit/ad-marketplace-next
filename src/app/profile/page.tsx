@@ -62,9 +62,15 @@ export default async function ProfilePage() {
                     </div>
 
                     <div className="flex gap-4 pt-4">
-                        <Button>Edit Profile</Button>
+                        <Button asChild>
+                            <a href={isClient ? "/client/settings" : "/freelancer/profile-settings"}>
+                                Edit Profile
+                            </a>
+                        </Button>
                         {!isClient && (
-                            <Button variant="outline">View My Gigs</Button>
+                            <Button variant="outline" asChild>
+                                <a href="/freelancer/portfolio">View My Portfolio</a>
+                            </Button>
                         )}
                     </div>
                 </CardContent>

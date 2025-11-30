@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Star, MapPin, Search, DollarSign, Plus, Briefcase, ArrowRight, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useToast } from "@/hooks/use-toast";
 
 type Freelancer = {
     id: string;
@@ -34,6 +35,7 @@ type Project = {
 };
 
 export default function FreelancersPage() {
+    const { toast } = useToast();
     const [searchTerm, setSearchTerm] = useState("");
     const [freelancers, setFreelancers] = useState<Freelancer[]>([]);
     const [selectedFreelancer, setSelectedFreelancer] = useState<Freelancer | null>(null);
@@ -119,13 +121,13 @@ export default function FreelancersPage() {
                 throw new Error(data.error || "Failed to send invitation");
             }
 
-            alert("Invitation sent successfully!");
+            toast({ variant: "success", title: "Éxito", description: "Invitation sent successfully!" });
             setSheetOpen(false);
             setInviteMessage("");
             setEstimatedHours("");
             setSelectedProject("");
         } catch (error: any) {
-            alert(error.message);
+            toast({ variant: "destructive", title: "Error", description: error.message });
         } finally {
             setLoading(false);
         }

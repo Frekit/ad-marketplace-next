@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Briefcase, Calendar, Euro, CheckCircle, XCircle, Clock } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
 type Milestone = {
     id: string
@@ -42,6 +43,7 @@ type ProjectDetails = {
 
 export default function ProjectOffersPage({ params }: { params: { id: string } }) {
     const router = useRouter()
+    const { toast } = useToast()
     const [loading, setLoading] = useState(true)
     const [accepting, setAccepting] = useState<string | null>(null)
     const [error, setError] = useState("")
@@ -108,7 +110,7 @@ export default function ProjectOffersPage({ params }: { params: { id: string } }
             await fetchProjectAndOffers()
             await fetchWalletBalance()
 
-            alert("¡Oferta aceptada! Los fondos han sido bloqueados en escrow.")
+            toast({ variant: "success", title: "Éxito", description: "¡Oferta aceptada! Los fondos han sido bloqueados en escrow." })
         } catch (err: any) {
             setError(err.message)
         } finally {

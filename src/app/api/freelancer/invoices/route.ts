@@ -15,14 +15,19 @@ export async function GET(req: NextRequest) {
 
         const supabase = createClient();
 
-        // Get all invoices for this freelancer
+        // Fetch all invoices for this freelancer
         const { data: invoices, error } = await supabase
             .from('invoices')
             .select(`
-                *,
-                projects:project_id (
-                    title,
-                    client_id
+                id,
+                invoice_number,
+                total_amount,
+                status,
+                issue_date,
+                created_at,
+                projects (
+                    id,
+                    title
                 )
             `)
             .eq('freelancer_id', session.user.id)
@@ -32,9 +37,7 @@ export async function GET(req: NextRequest) {
             throw error;
         }
 
-        return NextResponse.json({
-            invoices: invoices || [],
-        });
+        return NextResponse.json({ invoices: invoices || [] });
 
     } catch (error: any) {
         console.error('Error fetching invoices:', error);

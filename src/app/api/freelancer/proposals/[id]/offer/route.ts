@@ -17,6 +17,26 @@ export async function POST(
             );
         }
 
+        const supabase = createClient();
+
+        // Check freelancer verification status
+        const { data: freelancer, error: freelancerError } = await supabase
+            .from('users')
+            .select('verification_status')
+            .eq('id', session.user.id)
+            .single();
+
+        if (freelancerError) {
+            throw freelancerError;
+        }
+
+        if (freelancer?.verification_status !== 'approved') {
+            return NextResponse.json(
+                { error: 'You must be verified to submit offers. Please complete your verification first.' },
+                { status: 403 }
+            );
+        }
+
         const { id: invitationId } = await params;
         const {
             coverLetter,

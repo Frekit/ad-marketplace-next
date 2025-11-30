@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { CheckCircle, Clock, Euro, Calendar, Upload } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
 type Milestone = {
     id: number
@@ -34,6 +35,7 @@ type ProjectDetails = {
 
 export default function FreelancerProjectPage({ params }: { params: { id: string } }) {
     const router = useRouter()
+    const { toast } = useToast()
     const [loading, setLoading] = useState(true)
     const [completing, setCompleting] = useState<number | null>(null)
     const [error, setError] = useState("")
@@ -76,7 +78,7 @@ export default function FreelancerProjectPage({ params }: { params: { id: string
             }
 
             await fetchProject()
-            alert("¡Hito marcado como completado! El cliente será notificado para su aprobación.")
+            toast({ variant: "success", title: "Éxito", description: "¡Hito marcado como completado! El cliente será notificado para su aprobación." })
         } catch (err: any) {
             setError(err.message)
         } finally {

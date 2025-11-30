@@ -27,6 +27,17 @@ export async function GET(
 
     const supabase = createClient();
 
+    // Get freelancer's verification status
+    const { data: freelancerData, error: freelancerError } = await supabase
+      .from('users')
+      .select('verification_status')
+      .eq('id', session.user.id)
+      .single();
+
+    if (freelancerError) {
+      console.error('Error fetching freelancer verification status:', freelancerError);
+    }
+
     // Get the project_proposals record for this freelancer
     const { data: proposal, error: proposalError } = await supabase
       .from('project_proposals')
@@ -78,6 +89,7 @@ export async function GET(
     // Construct response
     const responseData = {
       id: proposal.id,
+      verification_status: freelancerData?.verification_status || 'pending',
       proposal: {
         id: proposal.id,
         project_id: proposal.project_id,

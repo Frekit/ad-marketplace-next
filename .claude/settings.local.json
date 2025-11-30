@@ -12,7 +12,8 @@
       "Bash(python3:*)",
       "Bash(cat:*)",
       "Bash(pkill:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []

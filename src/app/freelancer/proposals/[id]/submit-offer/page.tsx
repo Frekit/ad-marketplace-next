@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Plus, X, ArrowRight, Loader2, ArrowLeft, AlertCircle } from "lucide-react"
 import Link from "next/link"
+import { useToast } from "@/hooks/use-toast"
 
 type Milestone = {
     id?: string
@@ -47,6 +48,7 @@ type ClientDetails = {
 
 export default function SubmitOfferPage({ params }: { params: Promise<{ id: string }> }) {
     const router = useRouter()
+    const { toast } = useToast()
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
     const [proposalId, setProposalId] = useState<string | null>(null)
@@ -181,7 +183,7 @@ export default function SubmitOfferPage({ params }: { params: Promise<{ id: stri
                 throw new Error(data.error || "Error al enviar oferta")
             }
 
-            alert("¡Oferta enviada! El cliente recibirá una notificación con tu contraoferta.")
+            toast({ variant: "success", title: "Éxito", description: "¡Oferta enviada! El cliente recibirá una notificación con tu contraoferta." })
             router.push("/freelancer/proposals")
         } catch (err: any) {
             setError(err.message || "Error al enviar oferta")

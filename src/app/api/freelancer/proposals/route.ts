@@ -15,6 +15,11 @@ export async function GET(req: NextRequest) {
 
         const supabase = createClient();
 
+        // Get 30 days ago date
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const thirtyDaysAgoISO = thirtyDaysAgo.toISOString();
+
         // Fetch project proposals for this freelancer
         const { data: proposals, error } = await supabase
             .from('project_proposals')
@@ -42,6 +47,7 @@ export async function GET(req: NextRequest) {
                 )
             `)
             .eq('project_invitations.freelancer_id', session.user.id)
+            .gte('created_at', thirtyDaysAgoISO)
             .order('created_at', { ascending: false });
 
         if (error) {

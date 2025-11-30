@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import { ConfirmationDialog } from '@/components/confirmation-dialog';
 import { formatCurrency, formatTaxScenario, formatDate, getStatusLabel } from '@/lib/invoice-utils';
 
 interface Invoice {
@@ -46,8 +48,24 @@ interface Invoice {
     paid_at?: string;
 }
 
+interface WithdrawalRequest {
+    id: string;
+    amount: number;
+    status: string;
+    amount_blocked: number;
+    base_amount: number;
+    vat_amount: number;
+    invoice_expected_by: string;
+    created_at: string;
+    approved_at?: string;
+    paid_at?: string;
+    stripe_payout_id?: string;
+    payout_status?: string;
+}
+
 interface AdminInvoiceDetailProps {
     invoice: Invoice;
+    withdrawalRequest?: WithdrawalRequest | null;
     onApprove?: () => void;
     onReject?: () => void;
     onProcessPayment?: () => void;
@@ -55,17 +73,24 @@ interface AdminInvoiceDetailProps {
 
 export default function AdminInvoiceDetail({
     invoice,
+    withdrawalRequest,
     onApprove,
     onReject,
     onProcessPayment,
 }: AdminInvoiceDetailProps) {
+    const { toast } = useToast();
     const [showRejectForm, setShowRejectForm] = useState(false);
     const [rejectionReason, setRejectionReason] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
+    const [confirmPaymentOpen, setConfirmPaymentOpen] = useState(false);
 
     const handleReject = async () => {
         if (!rejectionReason.trim()) {
-            alert('Por favor, proporciona una razón para el rechazo');
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: 'Por favor, proporciona una razón para el rechazo',
+            });
             return;
         }
 
@@ -82,11 +107,19 @@ export default function AdminInvoiceDetail({
                 throw new Error(data.error || 'Failed to reject invoice');
             }
 
-            alert('Factura rechazada exitosamente');
+            toast({
+                variant: "success",
+                title: "Éxito",
+                description: 'Factura rechazada exitosamente',
+            });
             onReject?.();
             setShowRejectForm(false);
         } catch (error) {
-            alert(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: error instanceof Error ? error.message : 'Unknown error',
+            });
         } finally {
             setIsProcessing(false);
         }
@@ -104,20 +137,28 @@ export default function AdminInvoiceDetail({
                 throw new Error(data.error || 'Failed to approve invoice');
             }
 
-            alert('Factura aprobada exitosamente');
+            toast({
+                variant: "success",
+                title: "Éxito",
+                description: 'Factura aprobada exitosamente',
+            });
             onApprove?.();
         } catch (error) {
-            alert(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: error instanceof Error ? error.message : 'Unknown error',
+            });
         } finally {
             setIsProcessing(false);
         }
     };
 
-    const handleProcessPayment = async () => {
-        if (!window.confirm('¿Deseas procesar el pago de esta factura? Esta acción es irreversible.')) {
-            return;
-        }
+    const handleProcessPaymentClick = () => {
+        setConfirmPaymentOpen(true);
+    };
 
+    const confirmProcessPayment = async () => {
         setIsProcessing(true);
         try {
             const response = await fetch(`/api/invoices/${invoice.id}/process-payment`, {
@@ -129,10 +170,18 @@ export default function AdminInvoiceDetail({
                 throw new Error(data.error || 'Failed to process payment');
             }
 
-            alert('Pago procesado exitosamente');
+            toast({
+                variant: "success",
+                title: "Éxito",
+                description: 'Pago procesado exitosamente',
+            });
             onProcessPayment?.();
         } catch (error) {
-            alert(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: error instanceof Error ? error.message : 'Unknown error',
+            });
         } finally {
             setIsProcessing(false);
         }
@@ -286,6 +335,57 @@ export default function AdminInvoiceDetail({
                 </div>
             )}
 
+            {/* Withdrawal Request Info */}
+            {withdrawalRequest && (
+                <div className="bg-amber-50 border border-amber-200 p-6 rounded-lg">
+                    <h2 className="text-xl font-semibold mb-4 text-amber-900">Solicitud de Retiro Asociada</h2>
+                    <div className="grid md:grid-cols-2 gap-4">
+                        <div className="space-y-3">
+                            <div>
+                                <p className="text-sm text-amber-700">ID de Solicitud</p>
+                                <p className="font-mono font-semibold text-gray-900">{withdrawalRequest.id}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-amber-700">Monto Bloqueado</p>
+                                <p className="text-2xl font-bold text-amber-700">€{withdrawalRequest.amount_blocked.toFixed(2)}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-amber-700">Estado</p>
+                                <p className="font-semibold">{withdrawalRequest.status === 'pending_invoice' ? 'Esperando Factura' : withdrawalRequest.status === 'pending_approval' ? 'En Revisión' : withdrawalRequest.status === 'approved' ? 'Aprobado' : withdrawalRequest.status === 'paid' ? 'Pagado' : withdrawalRequest.status}</p>
+                            </div>
+                        </div>
+                        <div className="space-y-3">
+                            <div>
+                                <p className="text-sm text-amber-700">Base Imponible</p>
+                                <p className="font-semibold">€{withdrawalRequest.base_amount.toFixed(2)}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-amber-700">IVA (21%)</p>
+                                <p className="font-semibold">€{withdrawalRequest.vat_amount.toFixed(2)}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-amber-700">Total (Base + IVA)</p>
+                                <p className="font-semibold text-lg">€{(withdrawalRequest.base_amount + withdrawalRequest.vat_amount).toFixed(2)}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {withdrawalRequest.stripe_payout_id && (
+                        <div className="mt-4 pt-4 border-t border-amber-200">
+                            <div className="space-y-2">
+                                <div>
+                                    <p className="text-sm text-amber-700">ID de Payout Stripe</p>
+                                    <p className="font-mono font-semibold text-gray-900 text-sm">{withdrawalRequest.stripe_payout_id}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-amber-700">Estado del Payout</p>
+                                    <p className="font-semibold">{withdrawalRequest.payout_status}</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+
             {/* Verification Checklist */}
             <div className="bg-green-50 border border-green-200 p-6 rounded-lg">
                 <h2 className="text-xl font-semibold mb-4 text-green-900">Lista de Verificación</h2>
@@ -363,7 +463,7 @@ export default function AdminInvoiceDetail({
             ) : invoice.status === 'approved' ? (
                 <div className="bg-white p-6 rounded-lg shadow">
                     <button
-                        onClick={handleProcessPayment}
+                        onClick={handleProcessPaymentClick}
                         disabled={isProcessing}
                         className="w-full px-6 py-3 bg-emerald-600 text-white font-semibold text-lg rounded-md hover:bg-emerald-700 disabled:bg-gray-400"
                     >
@@ -371,6 +471,19 @@ export default function AdminInvoiceDetail({
                     </button>
                 </div>
             ) : null}
+
+            {/* Confirmation Dialog for payment processing */}
+            <ConfirmationDialog
+                open={confirmPaymentOpen}
+                onOpenChange={setConfirmPaymentOpen}
+                title="Procesar Pago"
+                description="¿Deseas procesar el pago de esta factura? Esta acción es irreversible y iniciará la transferencia del dinero."
+                confirmText="Procesar Pago"
+                cancelText="Cancelar"
+                isDestructive={true}
+                onConfirm={confirmProcessPayment}
+                isLoading={isProcessing}
+            />
         </div>
     );
 }

@@ -6,12 +6,14 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import InvoiceForm from '@/components/invoice-form';
 import { createClient } from '@/lib/supabase';
+import { useToast } from "@/hooks/use-toast";
 
 export default function InvoiceSubmissionPage({
     params,
 }: {
     params: Promise<{ id: string }>;
 }) {
+    const { toast } = useToast();
     const [projectId, setProjectId] = useState<string>('');
     const [milestoneIndex, setMilestoneIndex] = useState<number>(0);
     const [milestoneAmount, setMilestoneAmount] = useState<number>(0);
@@ -93,10 +95,10 @@ export default function InvoiceSubmissionPage({
                 throw new Error(data.error || data.details?.join(', ') || 'Error al crear la factura');
             }
 
-            alert('¡Factura enviada exitosamente! El administrador la revisará pronto.');
+            toast({ variant: "success", title: "Éxito", description: "¡Factura enviada exitosamente! El administrador la revisará pronto." });
             router.push('/freelancer/invoices');
         } catch (err) {
-            alert(`Error: ${err instanceof Error ? err.message : 'Error desconocido'}`);
+            toast({ variant: "destructive", title: "Error", description: `${err instanceof Error ? err.message : 'Error desconocido'}` });
         } finally {
             setIsSubmitting(false);
         }

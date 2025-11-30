@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Upload, FileText, Calculator } from "lucide-react"
 import { calculateInvoiceTotals, formatCurrency, SUPPORTED_COUNTRIES } from "@/lib/invoice-utils"
+import { useToast } from "@/hooks/use-toast"
 
 type Project = {
     id: string
@@ -25,6 +26,7 @@ type Project = {
 
 export default function CreateInvoicePage({ params }: { params: { id: string; milestoneIndex: string } }) {
     const router = useRouter()
+    const { toast } = useToast()
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
     const [error, setError] = useState("")
@@ -155,7 +157,7 @@ export default function CreateInvoicePage({ params }: { params: { id: string; mi
                 throw new Error(data.error || 'Error al crear la factura')
             }
 
-            alert('¡Factura enviada correctamente! Será revisada por el equipo.')
+            toast({ variant: "success", title: "Éxito", description: "¡Factura enviada correctamente! Será revisada por el equipo." })
             router.push('/freelancer/invoices')
         } catch (err: any) {
             setError(err.message)

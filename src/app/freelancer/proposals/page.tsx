@@ -4,7 +4,7 @@ import FreelancerLayout from "@/components/layouts/FreelancerLayout"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Briefcase, Clock, Euro } from "lucide-react"
+import { Briefcase, Clock, Euro, AlertCircle } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 
@@ -28,10 +28,24 @@ type Proposal = {
 export default function FreelancerProposalsPage() {
     const [proposals, setProposals] = useState<Proposal[]>([])
     const [loading, setLoading] = useState(true)
+    const [verificationStatus, setVerificationStatus] = useState<'pending' | 'submitted' | 'approved' | 'rejected' | null>(null)
 
     useEffect(() => {
         fetchProposals()
+        fetchVerificationStatus()
     }, [])
+
+    const fetchVerificationStatus = async () => {
+        try {
+            const res = await fetch('/api/freelancer/verification/status')
+            if (res.ok) {
+                const data = await res.json()
+                setVerificationStatus(data.verification_status)
+            }
+        } catch (error) {
+            console.error('Error fetching verification status:', error)
+        }
+    }
 
     const fetchProposals = async () => {
         try {
@@ -74,6 +88,30 @@ export default function FreelancerProposalsPage() {
                             Revisa las invitaciones de clientes y envía tus ofertas
                         </p>
                     </div>
+
+                    {/* Verification Reminder Banner */}
+                    {verificationStatus && verificationStatus !== 'approved' && (
+                        <Card className="mb-6 border-l-4 border-l-orange-500 bg-orange-50">
+                            <div className="p-4 flex items-start gap-3">
+                                <AlertCircle className="h-5 w-5 text-orange-600 flex-shrink-0 mt-0.5" />
+                                <div className="flex-1">
+                                    <h3 className="font-semibold text-orange-900 mb-1">
+                                        Verificación Pendiente
+                                    </h3>
+                                    <p className="text-sm text-orange-800 mb-3">
+                                        {verificationStatus === 'pending' && 'Aún no has iniciado tu verificación. Complétala para poder aceptar trabajos en la plataforma.'}
+                                        {verificationStatus === 'submitted' && 'Tu verificación está en revisión. Te notificaremos cuando sea aprobada.'}
+                                        {verificationStatus === 'rejected' && 'Tu verificación fue rechazada. Por favor, revisa los requisitos e intenta de nuevo.'}
+                                    </p>
+                                    <Link href="/freelancer/verification">
+                                        <Button size="sm" className="bg-orange-600 hover:bg-orange-700 text-white">
+                                            Ir a Verificación
+                                        </Button>
+                                    </Link>
+                                </div>
+                            </div>
+                        </Card>
+                    )}
 
                     {loading ? (
                         <div className="text-center py-12">

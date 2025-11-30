@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Upload, FileText, CheckCircle, AlertCircle, Clock } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
 type VerificationStatus = 'pending' | 'submitted' | 'approved' | 'rejected'
 
@@ -24,6 +25,7 @@ type DocumentStatus = {
 
 export default function FreelancerVerificationPage() {
     const router = useRouter()
+    const { toast } = useToast()
     const [loading, setLoading] = useState(true)
     const [uploading, setUploading] = useState<string | null>(null)
     const [submitting, setSubmitting] = useState(false)
@@ -90,7 +92,7 @@ export default function FreelancerVerificationPage() {
                 throw new Error(data.error || 'Error al enviar documentos')
             }
 
-            alert('¡Documentos enviados para revisión! Te notificaremos cuando sean aprobados.')
+            toast({ variant: "success", title: "Éxito", description: "¡Documentos enviados para revisión! Te notificaremos cuando sean aprobados." })
             await fetchStatus()
         } catch (err: any) {
             setError(err.message)
@@ -284,8 +286,6 @@ function DocumentUploadSection({
         const file = e.target.files?.[0]
         if (file && file.type === 'application/pdf') {
             onUpload(docType, file)
-        } else {
-            alert('Por favor selecciona un archivo PDF válido')
         }
     }
 

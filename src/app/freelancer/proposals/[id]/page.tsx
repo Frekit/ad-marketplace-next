@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Plus, X, ArrowRight, Briefcase, Calendar, Euro, MessageSquare, CheckCircle, XCircle, AlertCircle, ArrowLeft } from "lucide-react"
 import Link from "next/link"
+import { useToast } from "@/hooks/use-toast"
 
 type Milestone = {
     id: string
@@ -55,6 +56,7 @@ type ClientDetails = {
 
 type ProposalDetails = {
     id: string
+    verification_status: 'pending' | 'submitted' | 'approved' | 'rejected'
     proposal: Proposal
     project: ProjectDetails
     client: ClientDetails
@@ -62,6 +64,7 @@ type ProposalDetails = {
 
 export default function ProposalDetailsPage({ params }: { params: Promise<{ id: string }> }) {
     const router = useRouter()
+    const { toast } = useToast()
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
     const [error, setError] = useState("")
@@ -152,7 +155,7 @@ export default function ProposalDetailsPage({ params }: { params: Promise<{ id: 
                 throw new Error(data.error || "Error al rechazar propuesta")
             }
 
-            alert("Propuesta rechazada.")
+            toast({ variant: "success", title: "Éxito", description: "Propuesta rechazada." })
             router.push("/freelancer/proposals")
         } catch (err: any) {
             setError(err.message)
@@ -189,7 +192,7 @@ export default function ProposalDetailsPage({ params }: { params: Promise<{ id: 
                 throw new Error(data.error || "Error al aceptar propuesta")
             }
 
-            alert("¡Propuesta aceptada! El cliente recibirá una notificación.")
+            toast({ variant: "success", title: "Éxito", description: "¡Propuesta aceptada! El cliente recibirá una notificación." })
             router.push("/freelancer/proposals")
         } catch (err: any) {
             setError(err.message)
@@ -249,7 +252,7 @@ export default function ProposalDetailsPage({ params }: { params: Promise<{ id: 
                 throw new Error(data.error || "Error al enviar la oferta")
             }
 
-            alert("¡Oferta enviada! El cliente recibirá una notificación.")
+            toast({ variant: "success", title: "Éxito", description: "¡Oferta enviada! El cliente recibirá una notificación." })
             router.push("/freelancer/proposals")
         } catch (err: any) {
             setError(err.message)
@@ -397,8 +400,40 @@ export default function ProposalDetailsPage({ params }: { params: Promise<{ id: 
                         </div>
                     )}
 
-                    {/* Action Buttons - Only if proposal is active */}
-                    {isProposalActive && !showOfferForm && (
+                    {/* Verification Check - Block unverified freelancers */}
+                    {isProposalActive && proposal.verification_status !== 'approved' && (
+                        <Card className="border-2 border-orange-200 bg-orange-50">
+                            <CardHeader>
+                                <div className="flex items-start gap-3">
+                                    <AlertCircle className="h-6 w-6 text-orange-600 flex-shrink-0 mt-1" />
+                                    <div>
+                                        <CardTitle className="text-lg text-orange-900">Verificación Requerida</CardTitle>
+                                        <CardDescription className="text-orange-700 mt-1">
+                                            Debes completar tu verificación para aceptar trabajos en la plataforma
+                                        </CardDescription>
+                                    </div>
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-orange-800 mb-4">
+                                    Estado actual: <span className="font-semibold">
+                                        {proposal.verification_status === 'pending' ? 'No iniciado' :
+                                         proposal.verification_status === 'submitted' ? 'En revisión' :
+                                         proposal.verification_status === 'rejected' ? 'Rechazado' :
+                                         'Desconocido'}
+                                    </span>
+                                </p>
+                                <Link href="/freelancer/verification" className="inline-block">
+                                    <Button className="bg-orange-600 hover:bg-orange-700 text-white">
+                                        Ir a Verificación
+                                    </Button>
+                                </Link>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {/* Action Buttons - Only if proposal is active and freelancer is verified */}
+                    {isProposalActive && proposal.verification_status === 'approved' && !showOfferForm && (
                         <Card className="border-2 border-[#0F4C5C]">
                             <CardHeader>
                                 <CardTitle className="text-lg">¿Qué deseas hacer?</CardTitle>

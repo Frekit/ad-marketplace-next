@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -34,13 +35,13 @@ type Contract = {
 };
 
 export default function ContractDetailPage() {
+    const { toast } = useToast();
     const params = useParams();
     const router = useRouter();
     const contractId = params.id as string;
 
     const [contract, setContract] = useState<Contract | null>(null);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState("");
     const [actionLoading, setActionLoading] = useState(false);
     const [deliverables, setDeliverables] = useState("");
     const [selectedMilestone, setSelectedMilestone] = useState<number | null>(null);
@@ -56,11 +57,19 @@ export default function ContractDetailPage() {
                 const data = await res.json();
                 setContract(data);
             } else {
-                setError("No se pudo cargar el contrato");
+                toast({
+                    variant: "destructive",
+                    title: "Error",
+                    description: "No se pudo cargar el contrato",
+                });
                 setContract(null);
             }
         } catch (err: any) {
-            setError(err.message);
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: err.message,
+            });
             setContract(null);
         } finally {
             setLoading(false);
@@ -69,7 +78,6 @@ export default function ContractDetailPage() {
 
     const handleCompleteMilestone = async (milestoneId: number) => {
         setActionLoading(true);
-        setError("");
 
         try {
             const res = await fetch(`/api/contracts/${contractId}/milestones/${milestoneId}/complete`, {
@@ -84,11 +92,20 @@ export default function ContractDetailPage() {
                 throw new Error(data.error || "Failed to complete milestone");
             }
 
+            toast({
+                variant: "success",
+                title: "Éxito",
+                description: "Hito marcado como completado",
+            });
             setDeliverables("");
             setSelectedMilestone(null);
             fetchContract();
         } catch (err: any) {
-            setError(err.message);
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: err.message,
+            });
         } finally {
             setActionLoading(false);
         }
@@ -96,7 +113,6 @@ export default function ContractDetailPage() {
 
     const handleReleasePayment = async (milestoneId: number) => {
         setActionLoading(true);
-        setError("");
 
         try {
             const res = await fetch(`/api/contracts/${contractId}/milestones/${milestoneId}/release`, {
@@ -109,10 +125,18 @@ export default function ContractDetailPage() {
                 throw new Error(data.error || "Failed to release payment");
             }
 
-            alert(data.message);
+            toast({
+                variant: "success",
+                title: "Éxito",
+                description: data.message || "Pago liberado exitosamente",
+            });
             fetchContract();
         } catch (err: any) {
-            setError(err.message);
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: err.message,
+            });
         } finally {
             setActionLoading(false);
         }
@@ -309,13 +333,6 @@ export default function ContractDetailPage() {
                         ))}
                     </CardContent>
                 </Card>
-
-                {error && (
-                    <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 p-3 rounded-md border border-destructive/20">
-                        <AlertCircle className="h-4 w-4" />
-                        {error}
-                    </div>
-                )}
             </div>
         </div>
     );

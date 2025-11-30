@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { createClient } from '@/lib/supabase';
+import { getStripeClient } from '@/lib/stripe';
 
 async function processSepaTransfer(invoice: any) {
     // Test mode: Just log and mark as completed
@@ -138,6 +139,75 @@ export async function POST(
                 },
             });
 
+        // Check if there's a linked withdrawal request and trigger payout
+        const { data: withdrawalRequest, error: withdrawalFetchError } = await supabase
+            .from('withdrawal_requests')
+            .select('*')
+            .eq('invoice_id', invoiceId)
+            .eq('status', 'pending_approval')
+            .single();
+
+        if (withdrawalRequest && !withdrawalFetchError) {
+            try {
+                // Get freelancer's Stripe Connect account
+                const { data: freelancer } = await supabase
+                    .from('users')
+                    .select('stripe_connect_id')
+                    .eq('id', withdrawalRequest.freelancer_id)
+                    .single();
+
+                if (freelancer?.stripe_connect_id) {
+                    const stripe = getStripeClient();
+
+                    // Create payout via Stripe
+                    const payout = await stripe.payouts.create(
+                        {
+                            amount: Math.round(withdrawalRequest.amount * 100), // Convert to cents
+                            currency: 'eur',
+                            method: 'instant', // Instant SEPA transfer
+                        },
+                        {
+                            stripeAccount: freelancer.stripe_connect_id,
+                        }
+                    );
+
+                    // Update withdrawal request with payout details
+                    await supabase
+                        .from('withdrawal_requests')
+                        .update({
+                            status: 'paid',
+                            stripe_payout_id: payout.id,
+                            payout_status: payout.status,
+                            approved_at: now,
+                            paid_at: now,
+                            updated_at: now,
+                        })
+                        .eq('id', withdrawalRequest.id);
+
+                    // Create transaction record for withdrawal
+                    await supabase
+                        .from('transactions')
+                        .insert({
+                            user_id: withdrawalRequest.freelancer_id,
+                            type: 'withdrawal',
+                            amount: withdrawalRequest.amount,
+                            status: payout.status === 'succeeded' ? 'completed' : 'pending',
+                            description: `Withdrawal payout (Withdrawal Request: ${withdrawalRequest.id})`,
+                            reference_id: payout.id,
+                            metadata: {
+                                stripe_payout_id: payout.id,
+                                withdrawal_request_id: withdrawalRequest.id,
+                                arrival_date: payout.arrival_date,
+                                invoice_id: invoiceId,
+                            }
+                        });
+                }
+            } catch (withdrawalError: any) {
+                console.error('Error triggering withdrawal payout:', withdrawalError);
+                // Continue anyway - the invoice payment is successful
+            }
+        }
+
         // TODO: Send notification to freelancer that payment was processed
 
         return NextResponse.json({
@@ -146,6 +216,7 @@ export async function POST(
             transfer_id: transfer.id,
             amount: invoice.total_amount,
             paid_at: now,
+            withdrawal_payout_triggered: !!withdrawalRequest,
         });
 
     } catch (error: any) {

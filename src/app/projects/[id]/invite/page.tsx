@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, Plus, Trash2, Loader2 } from "lucide-react"
 import Link from "next/link"
+import { useToast } from "@/hooks/use-toast"
 
 type Milestone = {
     id?: string
@@ -37,6 +38,7 @@ type FreelancerOption = {
 
 export default function InviteFreelancerPage({ params }: { params: Promise<{ id: string }> }) {
     const router = useRouter()
+    const { toast } = useToast()
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
     const [projectId, setProjectId] = useState<string | null>(null)
@@ -208,7 +210,7 @@ export default function InviteFreelancerPage({ params }: { params: Promise<{ id:
             }
 
             // Show success and redirect
-            alert("¡Propuesta enviada! El freelancer recibirá una notificación.")
+            toast({ variant: "success", title: "Éxito", description: "¡Propuesta enviada! El freelancer recibirá una notificación." })
             router.push(`/projects/${projectId}`)
         } catch (err: any) {
             setError(err.message || "Error al enviar propuesta")

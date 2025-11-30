@@ -10,6 +10,7 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import SkillsInput from "@/components/freelancer/skills-input"
 import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
 interface ProfileData {
     user?: {
@@ -30,6 +31,7 @@ type AvailabilityType = "available" | "busy" | "unavailable"
 
 export default function FreelancerProfileSettings() {
     const router = useRouter()
+    const { toast } = useToast()
     const { data: session, status } = useSession({
         required: true,
         onUnauthenticated() {
@@ -49,10 +51,6 @@ export default function FreelancerProfileSettings() {
 
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
-    const [message, setMessage] = useState<{
-        type: "success" | "error"
-        text: string
-    } | null>(null)
 
     useEffect(() => {
         fetchProfile()
@@ -79,9 +77,10 @@ export default function FreelancerProfileSettings() {
             }
         } catch (error) {
             console.error("Error fetching profile:", error)
-            setMessage({
-                type: "error",
-                text: "Error al cargar el perfil",
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: "Error al cargar el perfil",
             })
         } finally {
             setLoading(false)
@@ -91,7 +90,6 @@ export default function FreelancerProfileSettings() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setSaving(true)
-        setMessage(null)
 
         try {
             const res = await fetch("/api/freelancer/profile", {
@@ -105,18 +103,16 @@ export default function FreelancerProfileSettings() {
                 throw new Error(error.error || "Failed to update profile")
             }
 
-            setMessage({
-                type: "success",
-                text: "Perfil actualizado exitosamente",
+            toast({
+                variant: "success",
+                title: "Éxito",
+                description: "Perfil actualizado exitosamente",
             })
-
-            setTimeout(() => {
-                setMessage(null)
-            }, 3000)
         } catch (error) {
-            setMessage({
-                type: "error",
-                text: error instanceof Error ? error.message : "Error al actualizar el perfil",
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: error instanceof Error ? error.message : "Error al actualizar el perfil",
             })
         } finally {
             setSaving(false)
@@ -146,23 +142,6 @@ export default function FreelancerProfileSettings() {
                             Actualiza tu información profesional para atraer más clientes
                         </p>
                     </div>
-
-                    {/* Messages */}
-                    {message && (
-                        <div
-                            className={`flex items-center gap-3 p-4 rounded-lg ${message.type === "success"
-                                ? "bg-green-50 text-green-800 border border-green-200"
-                                : "bg-red-50 text-red-800 border border-red-200"
-                                }`}
-                        >
-                            {message.type === "success" ? (
-                                <CheckCircle2 className="h-5 w-5 flex-shrink-0" />
-                            ) : (
-                                <AlertCircle className="h-5 w-5 flex-shrink-0" />
-                            )}
-                            <span>{message.text}</span>
-                        </div>
-                    )}
 
                     {/* Profile Form */}
                     <form onSubmit={handleSubmit} className="space-y-6">

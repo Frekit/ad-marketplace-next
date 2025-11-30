@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { CheckCircle, Clock, Euro, Calendar, Edit2, Sparkles, Loader2 } from "lucide-react"
 import AIMatchResults from "@/components/ai-match-results"
+import { useToast } from "@/hooks/use-toast"
 
 type Milestone = {
     id: number
@@ -40,6 +41,7 @@ type ProjectDetails = {
 
 export default function ProjectManagementPage({ params }: { params: Promise<{ id: string }> }) {
     const router = useRouter()
+    const { toast } = useToast()
     const [loading, setLoading] = useState(true)
     const [approving, setApproving] = useState<number | null>(null)
     const [error, setError] = useState("")
@@ -136,7 +138,7 @@ export default function ProjectManagementPage({ params }: { params: Promise<{ id
             }
 
             await fetchProject()
-            alert("¡Hito aprobado! Los fondos han sido transferidos al freelancer.")
+            toast({ variant: "success", title: "Éxito", description: "¡Hito aprobado! Los fondos han sido transferidos al freelancer." })
         } catch (err: any) {
             setError(err.message)
         } finally {

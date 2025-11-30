@@ -68,6 +68,32 @@ export async function POST(
             throw updateError;
         }
 
+        // Check if this invoice is linked to a withdrawal request
+        const { data: withdrawalRequest, error: withdrawalFetchError } = await supabase
+            .from('withdrawal_requests')
+            .select('*')
+            .eq('freelancer_id', invoice.freelancer_id)
+            .in('status', ['pending_invoice', 'pending_approval'])
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+
+        // If there's a withdrawal request, link it and update status
+        if (withdrawalRequest && !withdrawalFetchError) {
+            const { error: linkError } = await supabase
+                .from('withdrawal_requests')
+                .update({
+                    invoice_id: invoiceId,
+                    status: 'pending_approval',
+                    updated_at: now,
+                })
+                .eq('id', withdrawalRequest.id);
+
+            if (linkError) {
+                console.error('Error linking invoice to withdrawal request:', linkError);
+            }
+        }
+
         // Get freelancer email for notification
         const { data: freelancer, error: freelancerError } = await supabase
             .from('users')
@@ -95,6 +121,7 @@ export async function POST(
             message: 'Invoice approved successfully',
             invoice_id: invoiceId,
             approved_at: now,
+            withdrawal_request_linked: !!withdrawalRequest,
         });
 
         const responseWithHeaders = addRateLimitHeaders(response, rateLimit.headers);
