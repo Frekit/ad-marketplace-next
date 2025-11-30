@@ -32,20 +32,18 @@ export async function GET(
       .from('project_proposals')
       .select(`
         id,
-        freelancer_id,
-        client_id,
-        project_id,
-        duration,
-        hourly_rate,
-        total_amount,
-        milestones,
+        original_estimated_days,
+        original_hourly_rate,
+        original_total_budget,
+        original_suggested_milestones,
         status,
         created_at,
         conversation_id,
-        project_invitations (
-          id,
-          client_id,
-          freelancer_id
+        project_id,
+        invitation_id,
+        project_invitations!inner(
+          freelancer_id,
+          client_id
         ),
         projects (
           id,
@@ -53,7 +51,7 @@ export async function GET(
           description,
           skills_required
         ),
-        users!project_proposals_client_id_fkey (
+        users!project_invitations_client_id_fkey (
           id,
           first_name,
           last_name,
@@ -71,7 +69,10 @@ export async function GET(
       );
     }
 
-    // Get client data
+    // Get client data from the project_invitations relationship
+    const invitationData = proposal.project_invitations[0] || {};
+
+    // Get client details from users table
     const clientData = Array.isArray(proposal.users) ? proposal.users[0] : proposal.users;
 
     // Construct response
@@ -80,13 +81,13 @@ export async function GET(
       proposal: {
         id: proposal.id,
         project_id: proposal.project_id,
-        freelancer_id: proposal.freelancer_id,
-        client_id: proposal.client_id,
-        duration: proposal.duration,
-        hourly_rate: proposal.hourly_rate,
-        total_amount: proposal.total_amount,
+        freelancer_id: invitationData.freelancer_id,
+        client_id: invitationData.client_id,
+        duration: proposal.original_estimated_days,
+        hourly_rate: proposal.original_hourly_rate,
+        total_amount: proposal.original_total_budget,
         status: proposal.status,
-        milestones: proposal.milestones || [],
+        milestones: proposal.original_suggested_milestones || [],
         created_at: proposal.created_at,
         conversation_id: proposal.conversation_id
       },

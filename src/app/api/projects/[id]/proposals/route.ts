@@ -130,23 +130,42 @@ export async function POST(
       );
     }
 
-    // 5. Crear conversación automáticamente
-    const { data: conversation, error: convError } = await supabase
+    // 5. Buscar o crear conversación automáticamente
+    // Primero, buscar si ya existe una conversación entre estos dos usuarios
+    const { data: existingConv, error: searchConvError } = await supabase
       .from('conversations')
-      .insert({
-        participant_ids: [session.user.id, freelancer_id],
-        project_id: projectId,
-        proposal_id: proposal.id,
-        last_message_at: new Date().toISOString(),
-      })
-      .select()
+      .select('id')
+      .contains('participant_ids', [session.user.id, freelancer_id])
       .single();
 
-    if (convError || !conversation) {
-      console.error('Error creating conversation:', convError);
-      // No fallar aquí, la propuesta ya se creó
+    let conversation = null;
+
+    if (existingConv) {
+      // Usar la conversación existente
+      conversation = existingConv;
     } else {
-      // Actualizar proposal con conversation_id
+      // Crear una nueva conversación
+      const { data: newConv, error: convError } = await supabase
+        .from('conversations')
+        .insert({
+          participant_ids: [session.user.id, freelancer_id],
+          project_id: projectId,
+          proposal_id: proposal.id,
+          last_message_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+
+      if (convError) {
+        console.error('Error creating conversation:', convError);
+        // No fallar aquí, la propuesta ya se creó
+      } else {
+        conversation = newConv;
+      }
+    }
+
+    // Actualizar proposal con conversation_id si tenemos una conversación
+    if (conversation) {
       await supabase
         .from('project_proposals')
         .update({ conversation_id: conversation.id })
@@ -232,6 +251,7 @@ export async function GET(
       .select(`
         id,
         invitation_id,
+        project_id,
         original_estimated_days,
         original_hourly_rate,
         original_total_budget,
@@ -246,12 +266,12 @@ export async function GET(
         updated_at,
         project_invitations!inner(
           freelancer_id,
+          client_id,
           users!project_invitations_freelancer_id_fkey(
             id,
             first_name,
             last_name,
-            email,
-            hourly_rate
+            email
           )
         )
       `)
@@ -266,7 +286,28 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({ proposals });
+    // Format proposals for frontend
+    const formattedProposals = proposals.map((proposal: any) => {
+      const freelancer = proposal.project_invitations.users;
+      return {
+        id: proposal.id,
+        freelancer_id: proposal.project_invitations.freelancer_id,
+        freelancer: {
+          first_name: freelancer.first_name,
+          last_name: freelancer.last_name,
+          email: freelancer.email,
+        },
+        duration: proposal.original_estimated_days,
+        hourly_rate: proposal.original_hourly_rate,
+        total_amount: proposal.original_total_budget,
+        milestones: proposal.original_suggested_milestones || [],
+        status: proposal.freelancer_status,
+        created_at: proposal.created_at,
+        conversation_id: proposal.conversation_id,
+      };
+    });
+
+    return NextResponse.json({ proposals: formattedProposals });
   } catch (error) {
     console.error('Error fetching proposals:', error);
     return NextResponse.json(

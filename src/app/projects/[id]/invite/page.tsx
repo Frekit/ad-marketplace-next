@@ -190,15 +190,14 @@ export default function InviteFreelancerPage({ params }: { params: Promise<{ id:
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     freelancer_id: freelancerId,
-                    duration,
+                    estimated_days: duration,
                     hourly_rate: hourlyRate,
-                    milestones: milestones.map(m => ({
+                    suggested_milestones: milestones.map(m => ({
                         name: m.name,
                         description: m.description,
                         amount: m.amount,
                         due_date: m.due_date
-                    })),
-                    total_amount: totalAmount
+                    }))
                 })
             })
 
