@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase';
 
-export type NotificationType = 'invoice_approved' | 'invoice_rejected' | 'milestone_completed' | 'project_invitation' | 'payment_received' | 'verification_completed';
+export type NotificationType = 'invoice_approved' | 'invoice_rejected' | 'milestone_completed' | 'project_invitation' | 'payment_received' | 'verification_completed' | 'proposal_response' | 'offer_accepted' | 'chat_message';
 
 export interface Notification {
     id?: string;
