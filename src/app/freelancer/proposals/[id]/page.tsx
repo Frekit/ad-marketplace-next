@@ -399,60 +399,60 @@ export default function ProposalDetailsPage({ params }: { params: Promise<{ id: 
                                 <div className="border-2 rounded-lg p-4 bg-gray-50">
                                     <div className="space-y-3">
                                         <div className="flex justify-between items-center">
-                                            <span className="text-gray-700">Tu tarifa diaria:</span>
-                                            <span className="font-semibold text-lg">€{proposal.freelancer_daily_rate?.toFixed(2) || '0.00'}</span>
+                                            <span className="text-text-muted">Tu tarifa diaria:</span>
+                                            <span className="font-semibold text-lg text-text">€{proposal.freelancer_daily_rate?.toFixed(2) || '0.00'}</span>
                                         </div>
                                         <div className="flex justify-between items-center">
-                                            <span className="text-gray-700">Tarifa propuesta:</span>
-                                            <span className="font-semibold text-lg">€{proposal.proposal.price_per_day.toFixed(2)}</span>
+                                            <span className="text-text-muted">Tarifa propuesta:</span>
+                                            <span className="font-semibold text-lg text-text">€{proposal.proposal.price_per_day.toFixed(2)}</span>
                                         </div>
-                                        <div className="border-t pt-3 flex justify-between items-center">
-                                            <span className="text-gray-700 font-semibold">Diferencia:</span>
+                                        <div className="border-t border-border pt-3 flex justify-between items-center">
+                                            <span className="text-text font-semibold">Diferencia:</span>
                                             <span className={`font-bold text-lg ${
                                                 proposal.proposal.price_difference_percent !== null && proposal.proposal.price_difference_percent >= 0
-                                                    ? 'text-green-600'
-                                                    : 'text-red-600'
+                                                    ? 'text-success'
+                                                    : 'text-danger'
                                             }`}>
                                                 {proposal.proposal.price_difference_percent !== null && proposal.proposal.price_difference_percent >= 0 ? '+' : ''}
                                                 {proposal.proposal.price_difference_percent?.toFixed(1)}%
                                             </span>
                                         </div>
                                         {proposal.proposal.price_difference_percent !== null && proposal.proposal.price_difference_percent < 0 && (
-                                            <p className="text-xs text-red-600 mt-2">
+                                            <p className="text-xs text-danger mt-2">
                                                 ⚠️ Esta propuesta está por debajo de tu tarifa diaria configurada.
                                             </p>
                                         )}
                                         {proposal.proposal.price_difference_percent !== null && proposal.proposal.price_difference_percent > 0 && (
-                                            <p className="text-xs text-green-600 mt-2">
+                                            <p className="text-xs text-success mt-2">
                                                 ✓ Esta propuesta está por encima de tu tarifa diaria configurada.
                                             </p>
                                         )}
                                     </div>
                                 </div>
                             )}
-                            {!proposal.freelancer_daily_rate && (
+                            {!proposal.freelancer_daily_rate || proposal.freelancer_daily_rate <= 0 ? (
                                 <div className="border rounded-lg p-4 bg-yellow-50">
                                     <p className="text-sm text-yellow-700">
                                         ⚠️ Para ver la comparación con tu tarifa, por favor configúrala en tu perfil.
                                     </p>
                                 </div>
-                            )}
+                            ) : null}
 
                             {/* Milestones */}
                             {proposal.proposal.milestones && proposal.proposal.milestones.length > 0 && (
-                                <div className="border-t pt-4 mt-4">
-                                    <h4 className="font-semibold mb-3">Hitos</h4>
+                                <div className="border-t border-border pt-4 mt-4">
+                                    <h4 className="font-semibold mb-3 text-text">Hitos</h4>
                                     <div className="space-y-3">
                                         {proposal.proposal.milestones.map((milestone, idx) => (
-                                            <div key={idx} className="bg-gray-50 rounded p-3 border border-gray-200">
+                                            <div key={idx} className="bg-surface rounded p-3 border border-border">
                                                 <div className="flex items-start justify-between mb-2">
-                                                    <p className="font-medium text-gray-900">{milestone.name}</p>
-                                                    <p className="font-semibold text-[#0F4C5C]">€{milestone.amount.toFixed(2)}</p>
+                                                    <p className="font-medium text-text">{milestone.name}</p>
+                                                    <p className="font-semibold text-primary">€{milestone.amount.toFixed(2)}</p>
                                                 </div>
                                                 {milestone.description && (
-                                                    <p className="text-sm text-gray-600 mb-2">{milestone.description}</p>
+                                                    <p className="text-sm text-text-muted mb-2">{milestone.description}</p>
                                                 )}
-                                                <p className="text-xs text-gray-500 flex items-center gap-1">
+                                                <p className="text-xs text-text-muted flex items-center gap-1">
                                                     <Calendar className="h-3 w-3" />
                                                     {new Date(milestone.due_date).toLocaleDateString('es-ES')}
                                                 </p>
