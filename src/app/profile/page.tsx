@@ -63,7 +63,7 @@ export default async function ProfilePage() {
 
                     <div className="flex gap-4 pt-4">
                         <Button asChild>
-                            <a href={isClient ? "/client/settings" : "/freelancer/profile-settings"}>
+                            <a href="/profile/edit">
                                 Edit Profile
                             </a>
                         </Button>
