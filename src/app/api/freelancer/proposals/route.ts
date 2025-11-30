@@ -15,15 +15,17 @@ export async function GET(req: NextRequest) {
 
         const supabase = createClient();
 
-        // Fetch project invitations for this freelancer
-        const { data: invitations, error } = await supabase
-            .from('project_invitations')
+        // Fetch project proposals for this freelancer
+        const { data: proposals, error } = await supabase
+            .from('project_proposals')
             .select(`
                 id,
                 status,
                 created_at,
-                message,
-                project:projects (
+                project_invitations!inner(
+                    freelancer_id
+                ),
+                projects (
                     id,
                     title,
                     description,
@@ -31,7 +33,7 @@ export async function GET(req: NextRequest) {
                     allocated_budget,
                     created_at
                 ),
-                client:users!project_invitations_client_id_fkey (
+                users!project_invitations_client_id_fkey (
                     id,
                     first_name,
                     last_name,
@@ -39,7 +41,7 @@ export async function GET(req: NextRequest) {
                     company_name
                 )
             `)
-            .eq('freelancer_id', session.user.id)
+            .eq('project_invitations.freelancer_id', session.user.id)
             .order('created_at', { ascending: false });
 
         if (error) {
@@ -48,25 +50,24 @@ export async function GET(req: NextRequest) {
         }
 
         // Format the response
-        const proposals = invitations?.map(inv => {
-            const clientData = Array.isArray(inv.client) ? inv.client[0] : inv.client;
+        const formattedProposals = proposals?.map((prop: any) => {
+            const clientData = Array.isArray(prop.users) ? prop.users[0] : prop.users;
             const clientName = clientData?.company_name ||
                              `${clientData?.first_name || ''} ${clientData?.last_name || ''}`.trim() ||
                              'Cliente';
             return {
-                id: inv.id,
-                project: inv.project,
+                id: prop.id,
+                project: prop.projects,
                 client: {
                     name: clientName,
                     email: clientData?.email || '',
                 },
-                message: inv.message,
-                status: inv.status,
-                created_at: inv.created_at,
+                status: prop.status,
+                created_at: prop.created_at,
             };
         }) || [];
 
-        return NextResponse.json({ proposals });
+        return NextResponse.json({ proposals: formattedProposals });
 
     } catch (error: any) {
         console.error('Error fetching proposals:', error);
