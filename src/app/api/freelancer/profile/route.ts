@@ -15,10 +15,10 @@ export async function GET(req: NextRequest) {
 
         const supabase = createClient();
 
-        // Get user basic info including daily_rate
+        // Get user basic info including daily_rate and avatar_url
         const { data: user, error: userError } = await supabase
             .from('users')
-            .select('id, email, first_name, last_name, daily_rate')
+            .select('id, email, first_name, last_name, daily_rate, avatar_url')
             .eq('id', session.user.id)
             .single();
 

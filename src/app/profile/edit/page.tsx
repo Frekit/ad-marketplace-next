@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import SkillsInput from "@/components/freelancer/skills-input"
+import ProfilePictureUpload from "@/components/profile-picture-upload"
 import { AlertCircle, CheckCircle2, Loader2, ArrowLeft } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
@@ -19,6 +21,7 @@ interface ProfileData {
         first_name: string
         last_name: string
         daily_rate?: number
+        avatar_url?: string
     }
     profile?: {
         bio?: string
@@ -154,6 +157,36 @@ export default function ProfileEditPage() {
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
+                        {/* Foto de Perfil */}
+                        <Card className="p-6 bg-surface border-border">
+                            <h2 className="text-xl font-bold text-text mb-6">Foto de perfil</h2>
+
+                            <div className="flex flex-col items-center gap-6">
+                                <Avatar className="h-32 w-32 border-4 border-border">
+                                    <AvatarImage
+                                        src={profileData.user?.avatar_url}
+                                        alt={`${profileData.user?.first_name} ${profileData.user?.last_name}`}
+                                    />
+                                    <AvatarFallback className="bg-accent text-white text-2xl">
+                                        {(profileData.user?.first_name?.[0] || "")}{(profileData.user?.last_name?.[0] || "")}
+                                    </AvatarFallback>
+                                </Avatar>
+
+                                <div className="w-full">
+                                    <ProfilePictureUpload
+                                        userId={session?.user?.id || ""}
+                                        currentAvatarUrl={profileData.user?.avatar_url}
+                                        onUploadComplete={(url) => {
+                                            setProfileData(prev => ({
+                                                ...prev,
+                                                user: { ...prev.user, avatar_url: url } as any
+                                            }))
+                                        }}
+                                    />
+                                </div>
+                            </div>
+                        </Card>
+
                         {/* Información Personal */}
                         <Card className="p-6 bg-surface border-border">
                             <h2 className="text-xl font-bold text-text mb-6">Información personal</h2>
