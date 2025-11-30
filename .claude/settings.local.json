@@ -10,7 +10,8 @@
       "Bash(npm run build)",
       "Bash(curl:*)",
       "Bash(python3:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(pkill:*)"
     ],
     "deny": [],
     "ask": []

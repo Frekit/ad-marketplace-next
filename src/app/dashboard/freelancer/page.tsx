@@ -78,7 +78,14 @@ export default function FreelancerDashboard() {
                 const res = await fetch("/api/freelancer/proposals")
                 if (res.ok) {
                     const data = await res.json()
-                    setProposals(data.proposals || [])
+                    const proposalsList = data.proposals || []
+                    setProposals(proposalsList)
+
+                    // Update stats with actual proposal count
+                    setStats((prevStats) => ({
+                        ...prevStats,
+                        proposalsReceived: proposalsList.length,
+                    }))
                 } else {
                     const error = await res.json()
                     console.error("Error fetching proposals:", res.status, error)
