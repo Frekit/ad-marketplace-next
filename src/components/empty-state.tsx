@@ -26,16 +26,16 @@ export function EmptyState({
 }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-12 px-4">
-      <div className="bg-gray-100 rounded-full p-6 mb-6">
-        <Icon className="h-8 w-8 text-gray-600" />
+      <div className="bg-muted rounded-full p-6 mb-6">
+        <Icon className="h-8 w-8 text-muted-foreground" />
       </div>
 
-      <h3 className="text-lg font-semibold text-gray-900 mb-2 text-center">
+      <h3 className="text-lg font-semibold text-foreground mb-2 text-center">
         {title}
       </h3>
 
       {description && (
-        <p className="text-gray-600 text-center mb-6 max-w-sm">
+        <p className="text-muted-foreground text-center mb-6 max-w-sm">
           {description}
         </p>
       )}
@@ -45,7 +45,7 @@ export function EmptyState({
           <Button
             onClick={onAction}
             asChild={!!actionHref}
-            className="bg-[#FF5C5C] hover:bg-[#FF5C5C]/90"
+            className="bg-primary text-primary-foreground hover:bg-primary/90"
           >
             {actionHref ? (
               <a href={actionHref}>{actionLabel}</a>

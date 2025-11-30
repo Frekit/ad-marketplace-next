@@ -60,9 +60,9 @@ export function ConfirmationDialog({
         <DialogHeader>
           <div className="flex items-center gap-3">
             {isDestructive ? (
-              <AlertTriangle className="h-6 w-6 text-red-600 flex-shrink-0" />
+              <AlertTriangle className="h-6 w-6 text-destructive flex-shrink-0" />
             ) : (
-              <Info className="h-6 w-6 text-blue-600 flex-shrink-0" />
+              <Info className="h-6 w-6 text-primary flex-shrink-0" />
             )}
             <DialogTitle>{title}</DialogTitle>
           </div>
@@ -154,8 +154,8 @@ export function useConfirmationDialog({
         }
       }
 
-      // Store the callback temporarily
-      ;(confirm as any)._onConfirm = wrappedOnConfirm
+        // Store the callback temporarily
+        ; (confirm as any)._onConfirm = wrappedOnConfirm
     })
   }
 

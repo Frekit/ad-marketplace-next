@@ -21,17 +21,17 @@ interface TimelineProps {
 }
 
 const statusColors = {
-  completed: "bg-green-100 text-green-700 border-green-300",
-  current: "bg-blue-100 text-blue-700 border-blue-300",
-  pending: "bg-gray-100 text-gray-700 border-gray-300",
+  completed: "bg-green-500/10 text-green-500 border-green-500/20",
+  current: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+  pending: "bg-muted text-muted-foreground border-border",
 }
 
 const colorClasses = {
-  default: "bg-gray-100 text-gray-700",
-  success: "bg-green-100 text-green-700",
-  warning: "bg-yellow-100 text-yellow-700",
-  danger: "bg-red-100 text-red-700",
-  info: "bg-blue-100 text-blue-700",
+  default: "bg-muted text-muted-foreground",
+  success: "bg-green-500/10 text-green-500",
+  warning: "bg-yellow-500/10 text-yellow-500",
+  danger: "bg-red-500/10 text-red-500",
+  info: "bg-blue-500/10 text-blue-500",
 }
 
 export function Timeline({ items, direction = "vertical" }: TimelineProps) {
@@ -92,12 +92,12 @@ export function Timeline({ items, direction = "vertical" }: TimelineProps) {
                     {typeof item.timestamp === "string"
                       ? item.timestamp
                       : item.timestamp.toLocaleDateString("es-ES", {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
                   </p>
                 )}
 
@@ -251,13 +251,13 @@ export function TransactionTimeline({
 interface ProjectTimelineEvent {
   id: string
   event:
-    | "created"
-    | "proposal_sent"
-    | "proposal_accepted"
-    | "started"
-    | "milestone_completed"
-    | "completed"
-    | "paid"
+  | "created"
+  | "proposal_sent"
+  | "proposal_accepted"
+  | "started"
+  | "milestone_completed"
+  | "completed"
+  | "paid"
   date: Date
   description?: string
   details?: string

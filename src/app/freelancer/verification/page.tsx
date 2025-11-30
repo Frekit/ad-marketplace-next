@@ -105,7 +105,7 @@ export default function FreelancerVerificationPage() {
         return (
             <FreelancerLayout>
                 <div className="p-8 flex justify-center items-center min-h-screen">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF5C5C]"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
                 </div>
             </FreelancerLayout>
         )
@@ -120,8 +120,8 @@ export default function FreelancerVerificationPage() {
             <div className="p-8">
                 <div className="max-w-4xl mx-auto space-y-6">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900">Verificación de Documentos</h1>
-                        <p className="text-gray-600 mt-1">
+                        <h1 className="text-3xl font-bold text-foreground">Verificación de Documentos</h1>
+                        <p className="text-muted-foreground mt-1">
                             Sube los documentos requeridos para poder facturar en la plataforma
                         </p>
                     </div>
@@ -132,10 +132,10 @@ export default function FreelancerVerificationPage() {
                             <div className="flex items-center justify-between">
                                 <CardTitle>Estado de Verificación</CardTitle>
                                 <Badge className={
-                                    status?.verification_status === 'approved' ? 'bg-green-100 text-green-700' :
-                                        status?.verification_status === 'submitted' ? 'bg-blue-100 text-blue-700' :
-                                            status?.verification_status === 'rejected' ? 'bg-red-100 text-red-700' :
-                                                'bg-gray-100 text-gray-700'
+                                    status?.verification_status === 'approved' ? 'bg-green-500/10 text-green-500 hover:bg-green-500/20' :
+                                        status?.verification_status === 'submitted' ? 'bg-blue-500/10 text-blue-500 hover:bg-blue-500/20' :
+                                            status?.verification_status === 'rejected' ? 'bg-red-500/10 text-red-500 hover:bg-red-500/20' :
+                                                'bg-muted text-muted-foreground hover:bg-muted/80'
                                 }>
                                     {status?.verification_status === 'approved' ? 'Aprobado' :
                                         status?.verification_status === 'submitted' ? 'En Revisión' :
@@ -146,32 +146,32 @@ export default function FreelancerVerificationPage() {
                         </CardHeader>
                         <CardContent>
                             {status?.verification_status === 'approved' && (
-                                <div className="flex items-center gap-2 text-green-600">
+                                <div className="flex items-center gap-2 text-green-500">
                                     <CheckCircle className="h-5 w-5" />
                                     <span>Tus documentos han sido aprobados. Puedes facturar sin restricciones.</span>
                                 </div>
                             )}
                             {status?.verification_status === 'submitted' && (
-                                <div className="flex items-center gap-2 text-blue-600">
+                                <div className="flex items-center gap-2 text-blue-500">
                                     <Clock className="h-5 w-5" />
                                     <span>Tus documentos están siendo revisados. Te notificaremos pronto.</span>
                                 </div>
                             )}
                             {status?.verification_status === 'rejected' && (
                                 <div className="space-y-2">
-                                    <div className="flex items-center gap-2 text-red-600">
+                                    <div className="flex items-center gap-2 text-red-500">
                                         <AlertCircle className="h-5 w-5" />
                                         <span>Tus documentos han sido rechazados. Por favor, corrígelos y vuelve a enviarlos.</span>
                                     </div>
                                     {status?.verification_notes && (
-                                        <div className="bg-red-50 border border-red-200 rounded p-3 mt-2">
-                                            <p className="text-sm text-red-700"><strong>Motivo:</strong> {status.verification_notes}</p>
+                                        <div className="bg-red-500/10 border border-red-500/20 rounded p-3 mt-2">
+                                            <p className="text-sm text-red-500"><strong>Motivo:</strong> {status.verification_notes}</p>
                                         </div>
                                     )}
                                 </div>
                             )}
                             {status?.verification_status === 'pending' && !isSpanish && (
-                                <div className="text-gray-600">
+                                <div className="text-muted-foreground">
                                     <p>Como freelancer fuera de España, no necesitas subir documentos de verificación.</p>
                                 </div>
                             )}
@@ -179,7 +179,7 @@ export default function FreelancerVerificationPage() {
                     </Card>
 
                     {error && (
-                        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+                        <div className="bg-red-500/10 border border-red-500/20 text-red-500 px-4 py-3 rounded">
                             {error}
                         </div>
                     )}
@@ -235,19 +235,19 @@ export default function FreelancerVerificationPage() {
 
                             {/* Submit Button */}
                             {canSubmit && (
-                                <Card className="bg-blue-50 border-blue-200">
+                                <Card className="bg-blue-500/5 border-blue-500/20">
                                     <CardContent className="p-6">
                                         <div className="flex items-center justify-between">
                                             <div>
-                                                <h3 className="font-semibold text-gray-900">¿Todos los documentos subidos?</h3>
-                                                <p className="text-sm text-gray-600 mt-1">
+                                                <h3 className="font-semibold text-foreground">¿Todos los documentos subidos?</h3>
+                                                <p className="text-sm text-muted-foreground mt-1">
                                                     Envía tus documentos para revisión. Normalmente tarda 24-48 horas.
                                                 </p>
                                             </div>
                                             <Button
                                                 onClick={handleSubmitForReview}
                                                 disabled={submitting}
-                                                className="bg-[#0F4C5C] hover:bg-[#0F4C5C]/90 text-white"
+                                                className="bg-primary hover:bg-primary/90 text-primary-foreground"
                                             >
                                                 {submitting ? 'Enviando...' : 'Enviar para Revisión'}
                                             </Button>
@@ -290,13 +290,13 @@ function DocumentUploadSection({
     }
 
     return (
-        <div className="border rounded-lg p-4">
-            <h4 className="font-medium text-gray-900 mb-1">{title}</h4>
-            <p className="text-sm text-gray-600 mb-3">{description}</p>
+        <div className="border border-border rounded-lg p-4 bg-card">
+            <h4 className="font-medium text-foreground mb-1">{title}</h4>
+            <p className="text-sm text-muted-foreground mb-3">{description}</p>
 
             {currentFile ? (
-                <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded p-3">
-                    <div className="flex items-center gap-2 text-green-700">
+                <div className="flex items-center justify-between bg-green-500/10 border border-green-500/20 rounded p-3">
+                    <div className="flex items-center gap-2 text-green-500">
                         <CheckCircle className="h-5 w-5" />
                         <span className="text-sm font-medium">{currentFile}</span>
                     </div>
@@ -305,14 +305,14 @@ function DocumentUploadSection({
                             href={currentUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-sm text-blue-600 hover:underline"
+                            className="text-sm text-blue-500 hover:underline"
                         >
                             Ver documento
                         </a>
                     )}
                 </div>
             ) : (
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                <div className="border-2 border-dashed border-border rounded-lg p-4 text-center hover:bg-muted/50 transition-colors">
                     <input
                         type="file"
                         accept="application/pdf"
@@ -323,14 +323,14 @@ function DocumentUploadSection({
                     />
                     <label htmlFor={`upload-${docType}`} className={disabled ? 'cursor-not-allowed' : 'cursor-pointer'}>
                         {uploading ? (
-                            <div className="flex items-center justify-center gap-2 text-gray-600">
-                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-600"></div>
+                            <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-current"></div>
                                 <span>Subiendo...</span>
                             </div>
                         ) : (
                             <div>
-                                <Upload className="h-8 w-8 mx-auto text-gray-400 mb-2" />
-                                <p className="text-sm text-gray-600">Click para seleccionar PDF</p>
+                                <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                                <p className="text-sm text-muted-foreground">Click para seleccionar PDF</p>
                             </div>
                         )}
                     </label>

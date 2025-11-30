@@ -12,7 +12,8 @@ import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
 import { ConfirmationDialog } from "@/components/confirmation-dialog"
 import { SkeletonDashboard } from "@/components/skeleton"
-import { EmptyInvoices } from "@/components/empty-state"
+import { EmptyInvoices, EmptyTransactions } from "@/components/empty-state"
+import { TransactionTimeline } from "@/components/timeline"
 
 type WalletData = {
     available_balance: number
@@ -51,12 +52,14 @@ export default function FreelancerWalletPage() {
     const [withdrawalAmount, setWithdrawalAmount] = useState("")
     const [withdrawalRequest, setWithdrawalRequest] = useState<WithdrawalRequest | null>(null)
     const [invoices, setInvoices] = useState<Invoice[]>([])
+    const [withdrawalHistory, setWithdrawalHistory] = useState<WithdrawalRequest[]>([])
     const [showInitiateForm, setShowInitiateForm] = useState(false)
 
     useEffect(() => {
         fetchWallet()
         fetchWithdrawalRequest()
         fetchInvoices()
+        fetchWithdrawalHistory()
     }, [])
 
     const fetchWallet = async () => {
@@ -94,6 +97,18 @@ export default function FreelancerWalletPage() {
             }
         } catch (error) {
             console.error('Error fetching invoices:', error)
+        }
+    }
+
+    const fetchWithdrawalHistory = async () => {
+        try {
+            const res = await fetch('/api/freelancer/wallet')
+            if (res.ok) {
+                const data = await res.json()
+                setWithdrawalHistory(data.withdrawal_history || [])
+            }
+        } catch (error) {
+            console.error('Error fetching withdrawal history:', error)
         }
     }
 
@@ -487,6 +502,41 @@ export default function FreelancerWalletPage() {
                             </CardContent>
                         </Card>
                     )}
+
+                    {/* Transaction History Timeline */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Historial de Transacciones</CardTitle>
+                            <CardDescription>
+                                {withdrawalHistory.length > 0
+                                    ? `${withdrawalHistory.length} retiro${withdrawalHistory.length !== 1 ? 's' : ''} en tu historial`
+                                    : 'Tu historial de transacciones aparecerá aquí'}
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            {withdrawalHistory.length > 0 ? (
+                                <TransactionTimeline
+                                    events={withdrawalHistory.map(wr => ({
+                                        id: wr.id,
+                                        type: wr.status === 'paid' ? 'completed' : wr.status === 'pending_approval' ? 'pending' : wr.status === 'cancelled' ? 'withdrawn' : 'earned',
+                                        amount: wr.amount,
+                                        date: new Date(wr.created_at),
+                                        description: `Estado: ${
+                                            wr.status === 'pending_invoice' ? 'Esperando factura' :
+                                            wr.status === 'pending_approval' ? 'Factura en revisión' :
+                                            wr.status === 'approved' ? 'Aprobado' :
+                                            wr.status === 'paid' ? 'Pagado' :
+                                            wr.status === 'cancelled' ? 'Cancelado' :
+                                            'Fallido'
+                                        }`,
+                                        status: wr.status === 'paid' || wr.status === 'approved' ? 'completed' : 'pending'
+                                    }))}
+                                />
+                            ) : (
+                                <EmptyTransactions />
+                            )}
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
 

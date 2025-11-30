@@ -1,5 +1,6 @@
 "use client"
 
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { SessionProvider } from "next-auth/react";
 import { Toaster } from "@/components/toaster";
@@ -28,6 +29,7 @@ export default function RootLayout({
         <SessionProvider>
           {children}
           <Toaster />
+          <SpeedInsights />
         </SessionProvider>
       </body>
     </html>
