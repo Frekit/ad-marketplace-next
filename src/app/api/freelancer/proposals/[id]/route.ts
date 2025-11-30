@@ -33,6 +33,8 @@ export async function GET(
 
         const supabase = createClient();
 
+        console.log('Fetching proposal for freelancer:', session.user.id, 'with invitation id:', id);
+
         // Fetch specific proposal with all related data using Supabase relations
         const { data: invitation, error } = await supabase
             .from('project_invitations')
@@ -61,9 +63,27 @@ export async function GET(
             .eq('freelancer_id', session.user.id)
             .single();
 
-        if (error || !invitation) {
+        if (error) {
             console.error('Database error:', error);
             console.error('Request params - id:', id, 'freelancer_id:', session.user.id);
+        }
+
+        if (!invitation) {
+            console.error('Invitation not found for id:', id, 'freelancer_id:', session.user.id);
+
+            // Try to fetch the invitation regardless of freelancer_id to see if it exists
+            const { data: anyInvitation } = await supabase
+                .from('project_invitations')
+                .select('*')
+                .eq('id', id)
+                .single();
+
+            if (!anyInvitation) {
+                console.error('Invitation does not exist at all with id:', id);
+            } else {
+                console.error('Invitation exists but belongs to different freelancer. Invitation freelancer_id:', anyInvitation.freelancer_id);
+            }
+
             return NextResponse.json(
                 { error: 'Proposal not found', details: error?.message || 'Invitation not found' },
                 { status: 404 }
