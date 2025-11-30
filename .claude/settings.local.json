@@ -20,7 +20,10 @@
       "WebFetch(domain:orizon-template.webflow.io)",
       "Bash(npm run dev:*)",
       "Bash(taskkill:*)",
-      "Bash(timeout:*)"
+      "Bash(timeout:*)",
+      "Bash(npx supabase:*)",
+      "Bash(npx tsx:*)",
+      "Bash(ls -la \"C:\\Users\\alvar\\.gemini\\antigravity\\scratch\\ad-marketplace-next\\src\\app\"\" | grep -E \"^d \")"
     ],
     "deny": [],
     "ask": []

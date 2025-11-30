@@ -61,6 +61,11 @@ export async function POST(
 
         // If no conversation exists, create one
         if (!conversation_id) {
+            console.log('Creating conversation for:', {
+                participant_ids: [session.user.id, invitation.client_id],
+                project_id: invitation.project_id
+            });
+
             const { data: newConv, error: convError } = await supabase
                 .from('conversations')
                 .insert({
@@ -71,9 +76,15 @@ export async function POST(
                 .select('id')
                 .single();
 
+            console.log('Conversation creation result:', {
+                newConv,
+                convError
+            });
+
             if (convError || !newConv) {
+                console.error('Failed to create conversation:', convError);
                 return NextResponse.json(
-                    { error: 'Failed to create conversation' },
+                    { error: 'Failed to create conversation', details: convError },
                     { status: 500 }
                 );
             }

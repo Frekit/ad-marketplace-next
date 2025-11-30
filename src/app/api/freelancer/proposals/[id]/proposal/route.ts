@@ -57,19 +57,7 @@ export async function GET(
         client_id,
         estimated_days,
         hourly_rate,
-        suggested_milestones,
-        projects (
-          id,
-          title,
-          description,
-          skills_required
-        ),
-        users!invitations_client_id_fkey (
-          id,
-          first_name,
-          last_name,
-          email
-        )
+        suggested_milestones
       `)
       .eq('id', proposalId)
       .eq('freelancer_id', session.user.id)
@@ -80,13 +68,43 @@ export async function GET(
       freelancerId: session.user.id,
       invitation: invitation ? {
         id: invitation.id,
+        project_id: invitation.project_id,
         estimated_days: invitation.estimated_days,
         hourly_rate: invitation.hourly_rate,
-        suggested_milestones: invitation.suggested_milestones,
         status: invitation.status
       } : null,
       invitationError
     });
+
+    // Get project details separately
+    let projectData = null;
+    if (invitation?.project_id) {
+      const { data: proj, error: projError } = await supabase
+        .from('projects')
+        .select('id, title, description, skills_required')
+        .eq('id', invitation.project_id)
+        .single();
+
+      if (projError) {
+        console.error('Error fetching project:', projError);
+      }
+      projectData = proj;
+    }
+
+    // Get client details separately
+    let clientData = null;
+    if (invitation?.client_id) {
+      const { data: client, error: clientError } = await supabase
+        .from('users')
+        .select('id, first_name, last_name, email')
+        .eq('id', invitation.client_id)
+        .single();
+
+      if (clientError) {
+        console.error('Error fetching client:', clientError);
+      }
+      clientData = client;
+    }
 
     // If there's a proposal, get its details
     let proposalDetails = null;
@@ -134,9 +152,6 @@ export async function GET(
       );
     }
 
-    // Get client details from users table
-    const clientData = Array.isArray(proposal.users) ? proposal.users[0] : proposal.users;
-
     // Calculate price per day and percentage difference
     const pricePerDay = proposalDetails?.original_total_budget && proposalDetails?.original_estimated_days
       ? proposalDetails.original_total_budget / proposalDetails.original_estimated_days
@@ -179,7 +194,7 @@ export async function GET(
         conversation_id: proposalDetails?.conversation_id || null,
         has_proposal: !!proposalDetails
       },
-      project: proposal.projects || {
+      project: projectData || {
         id: proposal.project_id,
         title: 'Sin título',
         description: '',

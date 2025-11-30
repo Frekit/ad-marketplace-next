@@ -36,21 +36,8 @@ export async function GET(
 
         // Get messages
         const { data: messages, error } = await supabase
-            .from('messages')
-            .select(`
-                id,
-                conversation_id,
-                sender_id,
-                content,
-                read_at,
-                created_at,
-                users!messages_sender_id_fkey (
-                    id,
-                    first_name,
-                    last_name,
-                    email
-                )
-            `)
+            .from('conversation_messages')
+            .select('id, sender_id, content, read_at, created_at')
             .eq('conversation_id', conversationId)
             .order('created_at', { ascending: true });
 
@@ -58,9 +45,7 @@ export async function GET(
             throw error;
         }
 
-        return NextResponse.json({
-            messages: messages || []
-        });
+        return NextResponse.json(messages || []);
 
     } catch (error: any) {
         console.error('Error fetching messages:', error);
@@ -115,35 +100,26 @@ export async function POST(
 
         // Create message
         const { data: message, error } = await supabase
-            .from('messages')
+            .from('conversation_messages')
             .insert({
                 conversation_id: conversationId,
                 sender_id: session.user.id,
                 content: content.trim()
             })
-            .select(`
-                id,
-                conversation_id,
-                sender_id,
-                content,
-                read_at,
-                created_at,
-                users!messages_sender_id_fkey (
-                    id,
-                    first_name,
-                    last_name,
-                    email
-                )
-            `)
+            .select('id, sender_id, content, read_at, created_at')
             .single();
 
         if (error) {
             throw error;
         }
 
-        return NextResponse.json({
-            message
-        });
+        // Update conversation's last_message_at
+        await supabase
+            .from('conversations')
+            .update({ last_message_at: new Date().toISOString() })
+            .eq('id', conversationId);
+
+        return NextResponse.json(message);
 
     } catch (error: any) {
         console.error('Error sending message:', error);

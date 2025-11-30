@@ -95,8 +95,7 @@ export async function POST(
                 cover_letter: coverLetter,
                 milestones: milestones,
                 total_amount: totalAmount,
-                status: 'pending',
-                based_on_proposal_id: based_on_proposal_id || null,
+                status: 'pending'
             })
             .select()
             .single();
