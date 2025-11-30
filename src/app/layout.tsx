@@ -3,6 +3,7 @@
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { SessionProvider } from "next-auth/react";
+import { HeroUIProvider } from "@heroui/react";
 import { Toaster } from "@/components/toaster";
 import "./globals.css";
 
@@ -26,11 +27,13 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <SessionProvider>
-          {children}
-          <Toaster />
-          <SpeedInsights />
-        </SessionProvider>
+        <HeroUIProvider>
+          <SessionProvider>
+            {children}
+            <Toaster />
+            <SpeedInsights />
+          </SessionProvider>
+        </HeroUIProvider>
       </body>
     </html>
   );
