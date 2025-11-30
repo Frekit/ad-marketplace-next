@@ -55,6 +55,9 @@ export async function GET(
         project_id,
         freelancer_id,
         client_id,
+        estimated_days,
+        hourly_rate,
+        suggested_milestones,
         projects (
           id,
           title,
@@ -91,6 +94,21 @@ export async function GET(
         .single();
 
       proposalDetails = proposal;
+    }
+
+    // Use invitation data as fallback if no proposal details exist
+    if (!proposalDetails && invitation) {
+      const totalBudget = (invitation.estimated_days || 0) * (invitation.hourly_rate || 0);
+      proposalDetails = {
+        id: invitation.id,
+        original_estimated_days: invitation.estimated_days,
+        original_hourly_rate: invitation.hourly_rate,
+        original_total_budget: totalBudget,
+        original_suggested_milestones: invitation.suggested_milestones || [],
+        status: invitation.status,
+        conversation_id: null,
+        created_at: invitation.created_at
+      };
     }
 
     const proposal = invitation;

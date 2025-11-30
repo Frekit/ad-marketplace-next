@@ -16,10 +16,18 @@ export async function POST(
         }
 
         const { id: projectId } = await params;
-        const { freelancerId, message } = await req.json();
+        const { freelancerId, message, estimated_days, hourly_rate, suggested_milestones } = await req.json();
 
         if (!freelancerId) {
             return NextResponse.json({ error: 'Freelancer ID is required' }, { status: 400 });
+        }
+
+        if (estimated_days && estimated_days <= 0) {
+            return NextResponse.json({ error: 'Estimated days must be greater than 0' }, { status: 400 });
+        }
+
+        if (hourly_rate && hourly_rate <= 0) {
+            return NextResponse.json({ error: 'Hourly rate must be greater than 0' }, { status: 400 });
         }
 
         const supabase = createClient();
@@ -74,7 +82,7 @@ export async function POST(
             );
         }
 
-        // Create invitation
+        // Create invitation with proposal terms
         const { data: invitation, error: invitationError } = await supabase
             .from('project_invitations')
             .insert({
@@ -83,6 +91,9 @@ export async function POST(
                 client_id: session.user.id,
                 message: message || '',
                 status: 'pending',
+                estimated_days: estimated_days || null,
+                hourly_rate: hourly_rate || null,
+                suggested_milestones: suggested_milestones || [],
             })
             .select()
             .single();

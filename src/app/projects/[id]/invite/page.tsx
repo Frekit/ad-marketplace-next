@@ -187,11 +187,11 @@ export default function InviteFreelancerPage({ params }: { params: Promise<{ id:
         setSubmitting(true)
 
         try {
-            const res = await fetch(`/api/projects/${projectId}/proposals`, {
+            const res = await fetch(`/api/projects/${projectId}/invite`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    freelancer_id: freelancerId,
+                    freelancerId: freelancerId,
                     estimated_days: duration,
                     hourly_rate: hourlyRate,
                     suggested_milestones: milestones.map(m => ({
@@ -199,7 +199,8 @@ export default function InviteFreelancerPage({ params }: { params: Promise<{ id:
                         description: m.description,
                         amount: m.amount,
                         due_date: m.due_date
-                    }))
+                    })),
+                    message: ""
                 })
             })
 
