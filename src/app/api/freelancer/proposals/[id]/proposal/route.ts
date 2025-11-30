@@ -75,6 +75,19 @@ export async function GET(
       .eq('freelancer_id', session.user.id)
       .single();
 
+    console.log('Invitation data retrieved:', {
+      proposalId,
+      freelancerId: session.user.id,
+      invitation: invitation ? {
+        id: invitation.id,
+        estimated_days: invitation.estimated_days,
+        hourly_rate: invitation.hourly_rate,
+        suggested_milestones: invitation.suggested_milestones,
+        status: invitation.status
+      } : null,
+      invitationError
+    });
+
     // If there's a proposal, get its details
     let proposalDetails = null;
     if (invitation && invitation.project_id) {

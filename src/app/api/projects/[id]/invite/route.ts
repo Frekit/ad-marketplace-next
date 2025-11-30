@@ -18,6 +18,14 @@ export async function POST(
         const { id: projectId } = await params;
         const { freelancerId, message, estimated_days, hourly_rate, suggested_milestones } = await req.json();
 
+        console.log('Invite endpoint received:', {
+            projectId,
+            freelancerId,
+            estimated_days,
+            hourly_rate,
+            suggested_milestones
+        });
+
         if (!freelancerId) {
             return NextResponse.json({ error: 'Freelancer ID is required' }, { status: 400 });
         }

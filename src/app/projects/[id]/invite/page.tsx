@@ -48,7 +48,7 @@ export default function InviteFreelancerPage({ params }: { params: Promise<{ id:
     // Form state
     const [freelancerId, setFreelancerId] = useState("")
     const [duration, setDuration] = useState(7)
-    const [hourlyRate, setHourlyRate] = useState(50)
+    const [totalBudget, setTotalBudget] = useState(350)
     const [milestones, setMilestones] = useState<Milestone[]>([
         { name: "Inicio del Proyecto", description: "", amount: 0, due_date: "" }
     ])
@@ -77,8 +77,9 @@ export default function InviteFreelancerPage({ params }: { params: Promise<{ id:
         }
     }, [projectId])
 
-    // Calculate total amount from milestones
+    // Calculate total amount from milestones and price per day
     const totalAmount = milestones.reduce((sum, m) => sum + m.amount, 0)
+    const pricePerDay = duration > 0 ? totalBudget / duration : 0
 
     const fetchProject = async () => {
         if (!projectId) {
@@ -130,10 +131,6 @@ export default function InviteFreelancerPage({ params }: { params: Promise<{ id:
         setFreelancerId(freelancer.id)
         setFreelancerSearch(`${freelancer.first_name} ${freelancer.last_name}`)
         setShowFreelancerList(false)
-        // Auto-fill rate if available
-        if (freelancer.rate) {
-            setHourlyRate(freelancer.rate)
-        }
     }
 
     const addMilestone = () => {
@@ -169,8 +166,8 @@ export default function InviteFreelancerPage({ params }: { params: Promise<{ id:
             return
         }
 
-        if (hourlyRate <= 0) {
-            setError("La tarifa debe ser mayor a 0")
+        if (totalBudget <= 0) {
+            setError("El presupuesto debe ser mayor a 0")
             return
         }
 
@@ -179,8 +176,8 @@ export default function InviteFreelancerPage({ params }: { params: Promise<{ id:
             return
         }
 
-        if (Math.abs(totalAmount - (duration * hourlyRate)) > 0.01) {
-            setError("El total de los hitos debe ser igual al presupuesto calculado (duración × tarifa)")
+        if (Math.abs(totalAmount - totalBudget) > 0.01) {
+            setError("El total de los hitos debe ser igual al presupuesto total")
             return
         }
 
@@ -193,7 +190,7 @@ export default function InviteFreelancerPage({ params }: { params: Promise<{ id:
                 body: JSON.stringify({
                     freelancerId: freelancerId,
                     estimated_days: duration,
-                    hourly_rate: hourlyRate,
+                    hourly_rate: pricePerDay,
                     suggested_milestones: milestones.map(m => ({
                         name: m.name,
                         description: m.description,
@@ -339,14 +336,14 @@ export default function InviteFreelancerPage({ params }: { params: Promise<{ id:
                                         />
                                     </div>
                                     <div>
-                                        <Label htmlFor="rate">Precio Total (€)</Label>
+                                        <Label htmlFor="budget">Presupuesto Total (€)</Label>
                                         <Input
-                                            id="rate"
+                                            id="budget"
                                             type="number"
                                             step="0.01"
                                             min="0"
-                                            value={hourlyRate}
-                                            onChange={(e) => setHourlyRate(parseFloat(e.target.value) || 0)}
+                                            value={totalBudget}
+                                            onChange={(e) => setTotalBudget(parseFloat(e.target.value) || 0)}
                                             required
                                         />
                                     </div>
@@ -354,12 +351,12 @@ export default function InviteFreelancerPage({ params }: { params: Promise<{ id:
 
                                 <div className="bg-gray-50 p-4 rounded border border-gray-200">
                                     <div className="flex justify-between items-center mb-2">
-                                        <span className="text-gray-700">Precio Total:</span>
-                                        <span className="text-2xl font-bold text-[#0F4C5C]">€{hourlyRate.toFixed(2)}</span>
+                                        <span className="text-gray-700">Presupuesto Total:</span>
+                                        <span className="text-2xl font-bold text-[#0F4C5C]">€{totalBudget.toFixed(2)}</span>
                                     </div>
                                     <div className="flex justify-between items-center">
                                         <span className="text-gray-600">Precio por Jornada:</span>
-                                        <span className="text-lg font-semibold text-[#0F4C5C]">€{(hourlyRate / duration).toFixed(2)}/jornada</span>
+                                        <span className="text-lg font-semibold text-[#0F4C5C]">€{pricePerDay.toFixed(2)}/jornada</span>
                                     </div>
                                     <p className="text-xs text-gray-500 mt-2">({duration} jornadas)</p>
                                 </div>
@@ -454,12 +451,12 @@ export default function InviteFreelancerPage({ params }: { params: Promise<{ id:
                                         <span className="text-gray-700 font-medium">Total de hitos:</span>
                                         <span className="text-xl font-bold text-[#0F4C5C]">€{totalAmount.toFixed(2)}</span>
                                     </div>
-                                    {Math.abs(totalAmount - (duration * hourlyRate)) > 0.01 && (
+                                    {Math.abs(totalAmount - totalBudget) > 0.01 && (
                                         <p className="text-sm text-red-600 mt-2">
-                                            ⚠️ El total de hitos (€{totalAmount.toFixed(2)}) no coincide con el presupuesto (€{(duration * hourlyRate).toFixed(2)})
+                                            ⚠️ El total de hitos (€{totalAmount.toFixed(2)}) no coincide con el presupuesto (€{totalBudget.toFixed(2)})
                                         </p>
                                     )}
-                                    {Math.abs(totalAmount - (duration * hourlyRate)) <= 0.01 && (
+                                    {Math.abs(totalAmount - totalBudget) <= 0.01 && (
                                         <p className="text-sm text-green-600 mt-2">
                                             ✓ El total de hitos coincide con el presupuesto
                                         </p>
