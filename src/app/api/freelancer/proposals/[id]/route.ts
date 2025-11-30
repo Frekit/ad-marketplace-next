@@ -19,7 +19,7 @@ export async function GET(
         const { id } = await params;
         const supabase = createClient();
 
-        // Fetch specific proposal
+        // Fetch specific proposal with project details
         const { data: invitation, error } = await supabase
             .from('project_invitations')
             .select(`
@@ -27,35 +27,44 @@ export async function GET(
                 status,
                 message,
                 created_at,
-                project:projects (
-                    id,
-                    title,
-                    description,
-                    skills_required,
-                    allocated_budget,
-                    created_at
-                ),
-                client:users!project_invitations_client_id_fkey (
-                    id,
-                    first_name,
-                    last_name,
-                    email,
-                    company_name
-                )
+                client_id,
+                project_id
             `)
             .eq('id', id)
             .eq('freelancer_id', session.user.id)
             .single();
 
         if (error || !invitation) {
-            console.error('Database error:', error);
+            console.error('Database error (invitation):', error);
             return NextResponse.json(
                 { error: 'Proposal not found' },
                 { status: 404 }
             );
         }
 
-        const clientData = Array.isArray(invitation.client) ? invitation.client[0] : invitation.client;
+        // Fetch project details separately
+        const { data: project, error: projectError } = await supabase
+            .from('projects')
+            .select('id, title, description, skills_required, allocated_budget, created_at')
+            .eq('id', invitation.project_id)
+            .single();
+
+        if (projectError) {
+            console.error('Database error (project):', projectError);
+        }
+
+        // Fetch client details separately
+        const { data: client, error: clientError } = await supabase
+            .from('users')
+            .select('id, first_name, last_name, email, company_name')
+            .eq('id', invitation.client_id)
+            .single();
+
+        if (clientError) {
+            console.error('Database error (client):', clientError);
+        }
+
+        const clientData = client;
         const clientName = clientData?.company_name ||
                          `${clientData?.first_name || ''} ${clientData?.last_name || ''}`.trim() ||
                          'Cliente';
