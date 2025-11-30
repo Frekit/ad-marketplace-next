@@ -16,12 +16,15 @@ export async function GET(
             );
         }
 
-        // Get the ID from params - handle both Promise and direct access
-        const resolvedParams = await params;
-        const id = resolvedParams?.id;
+        // Get the ID from params
+        const { id } = await params;
 
-        if (!id) {
-            console.error('Missing proposal ID in params:', resolvedParams);
+        // Debug: log what we received
+        console.log('Received proposal ID:', { id, idType: typeof id });
+
+        // Validate the ID
+        if (!id || id === 'undefined') {
+            console.error('Invalid proposal ID:', id);
             return NextResponse.json(
                 { error: 'Invalid proposal ID' },
                 { status: 400 }
