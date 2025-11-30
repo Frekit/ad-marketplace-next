@@ -32,12 +32,15 @@ export async function GET(
                     title,
                     description,
                     skills_required,
+                    allocated_budget,
                     created_at
                 ),
                 client:users!project_invitations_client_id_fkey (
                     id,
-                    name,
-                    email
+                    first_name,
+                    last_name,
+                    email,
+                    company_name
                 )
             `)
             .eq('id', id)
@@ -45,18 +48,24 @@ export async function GET(
             .single();
 
         if (error || !invitation) {
+            console.error('Database error:', error);
             return NextResponse.json(
                 { error: 'Proposal not found' },
                 { status: 404 }
             );
         }
 
+        const clientData = Array.isArray(invitation.client) ? invitation.client[0] : invitation.client;
+        const clientName = clientData?.company_name ||
+                         `${clientData?.first_name || ''} ${clientData?.last_name || ''}`.trim() ||
+                         'Cliente';
+
         const proposal = {
             id: invitation.id,
             project: invitation.project,
             client: {
-                name: (invitation.client as any)?.[0]?.name || 'Cliente',
-                company: (invitation.client as any)?.[0]?.email || '',
+                name: clientName,
+                email: clientData?.email || '',
             },
             status: invitation.status,
             message: invitation.message,
