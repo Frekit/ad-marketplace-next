@@ -80,17 +80,25 @@ export async function POST(req: NextRequest) {
             .from('verification-docs')
             .getPublicUrl(filePath);
 
-        // Update freelancer_wallets with document info
+        // Map docType to the column names expected by users table
+        const docTypeMapping: Record<string, string> = {
+            'hacienda': 'doc_hacienda',
+            'seguridad_social': 'doc_seguridad_social',
+            'autonomo': 'doc_autonomo',
+        };
+
+        const baseField = docTypeMapping[docType];
+
+        // Update users table with document info
         const updateData: any = {
-            [`doc_${docType}_url`]: urlData.publicUrl,
-            [`doc_${docType}_filename`]: filename,
-            [`doc_${docType}_uploaded_at`]: new Date().toISOString(),
+            [`${baseField}_url`]: urlData.publicUrl,
+            [`${baseField}_filename`]: filename,
         };
 
         const { error: updateError } = await supabase
-            .from('freelancer_wallets')
+            .from('users')
             .update(updateData)
-            .eq('freelancer_id', session.user.id);
+            .eq('id', session.user.id);
 
         if (updateError) {
             console.error('Error updating wallet:', updateError);

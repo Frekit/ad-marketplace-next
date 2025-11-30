@@ -15,20 +15,20 @@ export async function POST(req: NextRequest) {
 
         const supabase = createClient();
 
-        // Get current wallet status
-        const { data: wallet, error: walletError } = await supabase
-            .from('freelancer_wallets')
+        // Get current user verification status
+        const { data: user, error: userError } = await supabase
+            .from('users')
             .select('doc_hacienda_url, doc_seguridad_social_url, doc_autonomo_url, country, verification_status')
-            .eq('freelancer_id', session.user.id)
+            .eq('id', session.user.id)
             .single();
 
-        if (walletError) {
-            throw walletError;
+        if (userError) {
+            throw userError;
         }
 
         // Check if all documents are uploaded (for Spanish freelancers)
-        if (wallet.country === 'ES') {
-            if (!wallet.doc_hacienda_url || !wallet.doc_seguridad_social_url || !wallet.doc_autonomo_url) {
+        if (user.country === 'ES') {
+            if (!user.doc_hacienda_url || !user.doc_seguridad_social_url || !user.doc_autonomo_url) {
                 return NextResponse.json(
                     { error: 'Please upload all required documents first' },
                     { status: 400 }
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
         }
 
         // Check if already submitted or approved
-        if (wallet.verification_status === 'submitted' || wallet.verification_status === 'approved') {
+        if (user.verification_status === 'submitted' || user.verification_status === 'approved') {
             return NextResponse.json(
                 { error: 'Documents already submitted or approved' },
                 { status: 400 }
@@ -46,12 +46,12 @@ export async function POST(req: NextRequest) {
 
         // Update status to submitted
         const { error: updateError } = await supabase
-            .from('freelancer_wallets')
+            .from('users')
             .update({
                 verification_status: 'submitted',
                 documents_submitted_at: new Date().toISOString(),
             })
-            .eq('freelancer_id', session.user.id);
+            .eq('id', session.user.id);
 
         if (updateError) {
             throw updateError;
