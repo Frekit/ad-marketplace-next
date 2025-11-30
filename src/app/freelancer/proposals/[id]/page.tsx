@@ -36,13 +36,12 @@ type ProposalDetails = {
     message?: string
 }
 
-export default function ProposalDetailsPage({ params }: { params: Promise<{ id: string }> | { id: string } }) {
+export default function ProposalDetailsPage({ params }: { params: { id: string } }) {
     const router = useRouter()
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
     const [error, setError] = useState("")
     const [proposal, setProposal] = useState<ProposalDetails | null>(null)
-    const [proposalId, setProposalId] = useState<string | null>(null)
 
     // Offer form state
     const [coverLetter, setCoverLetter] = useState("")
@@ -51,14 +50,10 @@ export default function ProposalDetailsPage({ params }: { params: Promise<{ id: 
     ])
 
     useEffect(() => {
-        // Handle params being a Promise or a regular object
-        const handleParams = async () => {
-            const resolvedParams = 'then' in params ? await params : params
-            setProposalId(resolvedParams.id)
-            await fetchProposalDetails(resolvedParams.id)
+        if (params?.id) {
+            fetchProposalDetails(params.id)
         }
-        handleParams()
-    }, [])
+    }, [params?.id])
 
     const fetchProposalDetails = async (id: string) => {
         if (!id) {
@@ -124,14 +119,14 @@ export default function ProposalDetailsPage({ params }: { params: Promise<{ id: 
             return
         }
 
-        if (!proposalId) {
+        if (!params?.id) {
             setError("ID de propuesta inválido")
             return
         }
 
         setSubmitting(true)
         try {
-            const res = await fetch(`/api/freelancer/proposals/${proposalId}/offer`, {
+            const res = await fetch(`/api/freelancer/proposals/${params.id}/offer`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
