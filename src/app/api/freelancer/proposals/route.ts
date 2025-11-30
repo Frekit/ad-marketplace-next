@@ -20,16 +20,14 @@ export async function GET(req: NextRequest) {
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
         const thirtyDaysAgoISO = thirtyDaysAgo.toISOString();
 
-        // Fetch project proposals for this freelancer
-        const { data: proposals, error } = await supabase
-            .from('project_proposals')
+        // Fetch project invitations for this freelancer (both with and without proposals)
+        const { data: invitations, error } = await supabase
+            .from('project_invitations')
             .select(`
                 id,
                 status,
+                message,
                 created_at,
-                project_invitations!inner(
-                    freelancer_id
-                ),
                 projects (
                     id,
                     title,
@@ -46,9 +44,11 @@ export async function GET(req: NextRequest) {
                     company_name
                 )
             `)
-            .eq('project_invitations.freelancer_id', session.user.id)
+            .eq('freelancer_id', session.user.id)
             .gte('created_at', thirtyDaysAgoISO)
             .order('created_at', { ascending: false });
+
+        const proposals = invitations;
 
         if (error) {
             console.error('Database error:', error);
@@ -56,20 +56,20 @@ export async function GET(req: NextRequest) {
         }
 
         // Format the response
-        const formattedProposals = proposals?.map((prop: any) => {
-            const clientData = Array.isArray(prop.users) ? prop.users[0] : prop.users;
+        const formattedProposals = proposals?.map((invitation: any) => {
+            const clientData = Array.isArray(invitation.users) ? invitation.users[0] : invitation.users;
             const clientName = clientData?.company_name ||
                              `${clientData?.first_name || ''} ${clientData?.last_name || ''}`.trim() ||
                              'Cliente';
             return {
-                id: prop.id,
-                project: prop.projects,
+                id: invitation.id,
+                project: invitation.projects,
                 client: {
                     name: clientName,
                     email: clientData?.email || '',
                 },
-                status: prop.status,
-                created_at: prop.created_at,
+                status: invitation.status,
+                created_at: invitation.created_at,
             };
         }) || [];
 

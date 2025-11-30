@@ -38,24 +38,17 @@ export async function GET(
       console.error('Error fetching freelancer verification status:', freelancerError);
     }
 
-    // Get the project_proposals record for this freelancer
-    const { data: proposal, error: proposalError } = await supabase
-      .from('project_proposals')
+    // Get the invitation for this freelancer (which may or may not have a proposal yet)
+    const { data: invitation, error: invitationError } = await supabase
+      .from('project_invitations')
       .select(`
         id,
-        original_estimated_days,
-        original_hourly_rate,
-        original_total_budget,
-        original_suggested_milestones,
         status,
+        message,
         created_at,
-        conversation_id,
         project_id,
-        invitation_id,
-        project_invitations!inner(
-          freelancer_id,
-          client_id
-        ),
+        freelancer_id,
+        client_id,
         projects (
           id,
           title,
@@ -73,15 +66,36 @@ export async function GET(
       .eq('freelancer_id', session.user.id)
       .single();
 
+    // If there's a proposal, get its details
+    let proposalDetails = null;
+    if (invitation && invitation.project_id) {
+      const { data: proposal } = await supabase
+        .from('project_proposals')
+        .select(`
+          id,
+          original_estimated_days,
+          original_hourly_rate,
+          original_total_budget,
+          original_suggested_milestones,
+          status,
+          conversation_id,
+          created_at
+        `)
+        .eq('invitation_id', invitation.id)
+        .single();
+
+      proposalDetails = proposal;
+    }
+
+    const proposal = invitation;
+    const proposalError = invitationError;
+
     if (proposalError || !proposal) {
       return NextResponse.json(
         { error: 'Proposal not found' },
         { status: 404 }
       );
     }
-
-    // Get client data from the project_invitations relationship
-    const invitationData = proposal.project_invitations[0] || {};
 
     // Get client details from users table
     const clientData = Array.isArray(proposal.users) ? proposal.users[0] : proposal.users;
@@ -91,17 +105,17 @@ export async function GET(
       id: proposal.id,
       verification_status: freelancerData?.verification_status || 'pending',
       proposal: {
-        id: proposal.id,
+        id: proposalDetails?.id || proposal.id,
         project_id: proposal.project_id,
-        freelancer_id: invitationData.freelancer_id,
-        client_id: invitationData.client_id,
-        duration: proposal.original_estimated_days,
-        hourly_rate: proposal.original_hourly_rate,
-        total_amount: proposal.original_total_budget,
-        status: proposal.status,
-        milestones: proposal.original_suggested_milestones || [],
-        created_at: proposal.created_at,
-        conversation_id: proposal.conversation_id
+        freelancer_id: proposal.freelancer_id,
+        client_id: proposal.client_id,
+        duration: proposalDetails?.original_estimated_days,
+        hourly_rate: proposalDetails?.original_hourly_rate,
+        total_amount: proposalDetails?.original_total_budget,
+        status: proposalDetails?.status || proposal.status,
+        milestones: proposalDetails?.original_suggested_milestones || [],
+        created_at: proposalDetails?.created_at || proposal.created_at,
+        conversation_id: proposalDetails?.conversation_id
       },
       project: proposal.projects || {
         id: proposal.project_id,
