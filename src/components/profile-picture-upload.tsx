@@ -76,13 +76,17 @@ export default function ProfilePictureUpload({
                 .from('avatars')
                 .getPublicUrl(filePath)
 
-            // Update user record
-            const { error: updateError } = await supabase
-                .from('users')
-                .update({ avatar_url: publicUrl })
-                .eq('id', userId)
+            // Update user record via API endpoint
+            const updateRes = await fetch('/api/freelancer/profile/avatar', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ avatar_url: publicUrl })
+            })
 
-            if (updateError) throw updateError
+            if (!updateRes.ok) {
+                const errorData = await updateRes.json()
+                throw new Error(errorData.error || 'Failed to update avatar')
+            }
 
             setSuccess(true)
             onUploadComplete?.(publicUrl)
