@@ -372,25 +372,45 @@ export default function ProposalDetailsPage({ params }: { params: Promise<{ id: 
                             <CardTitle>Términos Propuestos</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-6">
+                            {!proposal.proposal.has_proposal ? (
+                                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                                    <p className="text-amber-900 font-medium mb-2">
+                                        📋 El cliente aún no ha definido los términos de la propuesta
+                                    </p>
+                                    <p className="text-amber-800 text-sm">
+                                        Responde con tu propia propuesta usando el formulario de "Hacer una Oferta". Define el número de jornadas, presupuesto total y precio por jornada que consideres adecuados.
+                                    </p>
+                                </div>
+                            ) : null}
+
                             {/* Main terms grid */}
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div className="border rounded-lg p-4 bg-blue-50">
+                                <div className={`border rounded-lg p-4 ${proposal.proposal.duration ? 'bg-blue-50' : 'bg-gray-50'}`}>
                                     <p className="text-sm text-gray-600 mb-1">Número de Jornadas</p>
-                                    <p className="font-bold text-2xl text-[#0F4C5C]">
-                                        {proposal.proposal.duration || 'Por definir'}
+                                    <p className={`font-bold text-2xl ${proposal.proposal.duration ? 'text-[#0F4C5C]' : 'text-gray-400'}`}>
+                                        {proposal.proposal.duration || '-'}
                                     </p>
+                                    {!proposal.proposal.duration && (
+                                        <p className="text-xs text-gray-500 mt-1">No definido por el cliente</p>
+                                    )}
                                 </div>
-                                <div className="border rounded-lg p-4 bg-green-50">
+                                <div className={`border rounded-lg p-4 ${proposal.proposal.total_amount ? 'bg-green-50' : 'bg-gray-50'}`}>
                                     <p className="text-sm text-gray-600 mb-1">Precio Total</p>
-                                    <p className="font-bold text-2xl text-[#0F4C5C]">
-                                        €{proposal.proposal.total_amount ? proposal.proposal.total_amount.toFixed(2) : '0.00'}
+                                    <p className={`font-bold text-2xl ${proposal.proposal.total_amount ? 'text-[#0F4C5C]' : 'text-gray-400'}`}>
+                                        €{proposal.proposal.total_amount ? proposal.proposal.total_amount.toFixed(2) : '-'}
                                     </p>
+                                    {!proposal.proposal.total_amount && (
+                                        <p className="text-xs text-gray-500 mt-1">No definido por el cliente</p>
+                                    )}
                                 </div>
-                                <div className="border rounded-lg p-4 bg-purple-50">
+                                <div className={`border rounded-lg p-4 ${proposal.proposal.price_per_day ? 'bg-purple-50' : 'bg-gray-50'}`}>
                                     <p className="text-sm text-gray-600 mb-1">Precio por Jornada</p>
-                                    <p className="font-bold text-2xl text-[#0F4C5C]">
-                                        {proposal.proposal.price_per_day ? `€${proposal.proposal.price_per_day.toFixed(2)}` : 'Por definir'}
+                                    <p className={`font-bold text-2xl ${proposal.proposal.price_per_day ? 'text-[#0F4C5C]' : 'text-gray-400'}`}>
+                                        {proposal.proposal.price_per_day ? `€${proposal.proposal.price_per_day.toFixed(2)}` : '-'}
                                     </p>
+                                    {!proposal.proposal.price_per_day && (
+                                        <p className="text-xs text-gray-500 mt-1">Calcula: Total / Jornadas</p>
+                                    )}
                                 </div>
                             </div>
 
