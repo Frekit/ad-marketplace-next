@@ -8,22 +8,26 @@ import { notFound } from "next/navigation";
 async function getFreelancer(id: string) {
     try {
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-        const res = await fetch(`${baseUrl}/api/freelancers/search?id=${id}`, {
+        // First, fetch all freelancers to find the one with matching ID
+        const res = await fetch(`${baseUrl}/api/freelancers/search`, {
             cache: 'no-store'
         });
 
         if (!res.ok) return null;
 
         const data = await res.json();
-        return data.freelancers?.[0] || null;
+        // Find the freelancer with matching ID
+        const freelancer = data.freelancers?.find((f: any) => f.id === id);
+        return freelancer || null;
     } catch (error) {
         console.error('Error fetching freelancer:', error);
         return null;
     }
 }
 
-export default async function FreelancerProfilePage({ params }: { params: { id: string } }) {
-    const freelancer = await getFreelancer(params.id);
+export default async function FreelancerProfilePage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
+    const freelancer = await getFreelancer(id);
 
     if (!freelancer) {
         notFound();
