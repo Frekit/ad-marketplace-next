@@ -71,7 +71,14 @@ export async function GET(
 
         const proposal = {
             id: invitation.id,
-            project: invitation.project,
+            project: {
+                id: project?.id,
+                title: project?.title || 'Sin título',
+                description: project?.description || '',
+                skills_required: project?.skills_required || [],
+                allocated_budget: project?.allocated_budget,
+                created_at: project?.created_at,
+            },
             client: {
                 name: clientName,
                 email: clientData?.email || '',
