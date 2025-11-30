@@ -36,7 +36,7 @@ type ProposalDetails = {
     message?: string
 }
 
-export default function ProposalDetailsPage({ params }: { params: { id: string } }) {
+export default function ProposalDetailsPage({ params }: { params: Promise<{ id: string }> }) {
     const router = useRouter()
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
@@ -50,14 +50,18 @@ export default function ProposalDetailsPage({ params }: { params: { id: string }
     ])
 
     useEffect(() => {
-        const id = params?.id
-        console.log('ProposalDetailsPage - useEffect executing with id:', id)
-        if (id) {
-            fetchProposalDetails(id)
-        } else {
-            console.log('No ID found in params:', params)
-            setLoading(false)
+        const resolveParams = async () => {
+            const resolvedParams = await params
+            const id = resolvedParams?.id
+            console.log('ProposalDetailsPage - useEffect executing with id:', id)
+            if (id) {
+                fetchProposalDetails(id)
+            } else {
+                console.log('No ID found in params:', resolvedParams)
+                setLoading(false)
+            }
         }
+        resolveParams()
     }, [params])
 
     const fetchProposalDetails = async (id: string) => {
@@ -124,14 +128,15 @@ export default function ProposalDetailsPage({ params }: { params: { id: string }
             return
         }
 
-        if (!params?.id) {
+        const resolvedParams = await params
+        if (!resolvedParams?.id) {
             setError("ID de propuesta inválido")
             return
         }
 
         setSubmitting(true)
         try {
-            const res = await fetch(`/api/freelancer/proposals/${params.id}/offer`, {
+            const res = await fetch(`/api/freelancer/proposals/${resolvedParams.id}/offer`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
