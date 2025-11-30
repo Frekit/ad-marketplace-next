@@ -82,10 +82,10 @@ export default function FreelancerDashboard() {
                     setProposals(proposalsList)
 
                     // Update stats with actual proposal count
-                    setStats((prevStats) => ({
+                    setStats((prevStats) => prevStats ? ({
                         ...prevStats,
                         proposalsReceived: proposalsList.length,
-                    }))
+                    }) : null)
                 } else {
                     const error = await res.json()
                     console.error("Error fetching proposals:", res.status, error)
