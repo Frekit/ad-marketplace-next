@@ -50,10 +50,11 @@ export default function ProposalDetailsPage({ params }: { params: { id: string }
     ])
 
     useEffect(() => {
-        if (params?.id) {
-            fetchProposalDetails(params.id)
+        const id = params?.id
+        if (id) {
+            fetchProposalDetails(id)
         }
-    }, [params?.id])
+    }, [params])
 
     const fetchProposalDetails = async (id: string) => {
         if (!id) {
