@@ -19,7 +19,7 @@ export async function GET(
         const { id } = await params;
         const supabase = createClient();
 
-        // Fetch specific proposal with project details
+        // Fetch specific proposal with all related data using Supabase relations
         const { data: invitation, error } = await supabase
             .from('project_invitations')
             .select(`
@@ -27,15 +27,28 @@ export async function GET(
                 status,
                 message,
                 created_at,
-                client_id,
-                project_id
+                project:projects (
+                    id,
+                    title,
+                    description,
+                    skills_required,
+                    allocated_budget,
+                    created_at
+                ),
+                client:users!project_invitations_client_id_fkey (
+                    id,
+                    first_name,
+                    last_name,
+                    email,
+                    company_name
+                )
             `)
             .eq('id', id)
             .eq('freelancer_id', session.user.id)
             .single();
 
         if (error || !invitation) {
-            console.error('Database error (invitation):', error);
+            console.error('Database error:', error);
             console.error('Request params - id:', id, 'freelancer_id:', session.user.id);
             return NextResponse.json(
                 { error: 'Proposal not found', details: error?.message || 'Invitation not found' },
@@ -43,48 +56,22 @@ export async function GET(
             );
         }
 
-        console.log('Invitation found:', { id: invitation.id, project_id: invitation.project_id, client_id: invitation.client_id });
+        console.log('Invitation with relations fetched successfully');
 
-        // Fetch project details separately
-        const { data: project, error: projectError } = await supabase
-            .from('projects')
-            .select('id, title, description, skills_required, allocated_budget, created_at')
-            .eq('id', invitation.project_id)
-            .single();
-
-        if (projectError) {
-            console.error('Database error (project):', projectError);
-        } else {
-            console.log('Project found:', { id: project?.id, title: project?.title });
-        }
-
-        // Fetch client details separately
-        const { data: client, error: clientError } = await supabase
-            .from('users')
-            .select('id, first_name, last_name, email, company_name')
-            .eq('id', invitation.client_id)
-            .single();
-
-        if (clientError) {
-            console.error('Database error (client):', clientError);
-        } else {
-            console.log('Client found:', { id: client?.id, name: client?.first_name });
-        }
-
-        const clientData = client;
+        // Handle client data (could be array from relation)
+        const clientData = Array.isArray(invitation.client) ? invitation.client[0] : invitation.client;
         const clientName = clientData?.company_name ||
                          `${clientData?.first_name || ''} ${clientData?.last_name || ''}`.trim() ||
                          'Cliente';
 
+        // Construct the response
         const proposal = {
             id: invitation.id,
-            project: {
-                id: project?.id,
-                title: project?.title || 'Sin título',
-                description: project?.description || '',
-                skills_required: project?.skills_required || [],
-                allocated_budget: project?.allocated_budget,
-                created_at: project?.created_at,
+            project: invitation.project || {
+                id: undefined,
+                title: 'Sin título',
+                description: '',
+                skills_required: [],
             },
             client: {
                 name: clientName,
