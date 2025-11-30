@@ -27,10 +27,10 @@ export async function GET(
 
     const supabase = createClient();
 
-    // Get freelancer's verification status
+    // Get freelancer's verification status and rate
     const { data: freelancerData, error: freelancerError } = await supabase
       .from('users')
-      .select('verification_status')
+      .select('verification_status, daily_rate')
       .eq('id', session.user.id)
       .single();
 
@@ -100,10 +100,21 @@ export async function GET(
     // Get client details from users table
     const clientData = Array.isArray(proposal.users) ? proposal.users[0] : proposal.users;
 
+    // Calculate price per day and percentage difference
+    const pricePerDay = proposalDetails?.original_total_budget && proposalDetails?.original_estimated_days
+      ? proposalDetails.original_total_budget / proposalDetails.original_estimated_days
+      : null;
+
+    const freelancerDailyRate = freelancerData?.daily_rate || 0;
+    const priceDifference = pricePerDay && freelancerDailyRate
+      ? ((pricePerDay - freelancerDailyRate) / freelancerDailyRate) * 100
+      : null;
+
     // Construct response
     const responseData = {
       id: proposal.id,
       verification_status: freelancerData?.verification_status || 'pending',
+      freelancer_daily_rate: freelancerDailyRate,
       proposal: {
         id: proposalDetails?.id || proposal.id,
         project_id: proposal.project_id,
@@ -112,6 +123,8 @@ export async function GET(
         duration: proposalDetails?.original_estimated_days || null,
         hourly_rate: proposalDetails?.original_hourly_rate || null,
         total_amount: proposalDetails?.original_total_budget || 0,
+        price_per_day: pricePerDay,
+        price_difference_percent: priceDifference,
         status: proposalDetails?.status || proposal.status,
         milestones: proposalDetails?.original_suggested_milestones || [],
         created_at: proposalDetails?.created_at || proposal.created_at,

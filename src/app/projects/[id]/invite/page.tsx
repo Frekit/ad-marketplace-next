@@ -327,7 +327,7 @@ export default function InviteFreelancerPage({ params }: { params: Promise<{ id:
                             <CardContent className="space-y-4">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <Label htmlFor="duration">Duración (días)</Label>
+                                        <Label htmlFor="duration">Número de Jornadas</Label>
                                         <Input
                                             id="duration"
                                             type="number"
@@ -338,7 +338,7 @@ export default function InviteFreelancerPage({ params }: { params: Promise<{ id:
                                         />
                                     </div>
                                     <div>
-                                        <Label htmlFor="rate">Tarifa horaria (€/hora)</Label>
+                                        <Label htmlFor="rate">Precio Total (€)</Label>
                                         <Input
                                             id="rate"
                                             type="number"
@@ -352,11 +352,15 @@ export default function InviteFreelancerPage({ params }: { params: Promise<{ id:
                                 </div>
 
                                 <div className="bg-gray-50 p-4 rounded border border-gray-200">
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-gray-700">Presupuesto total calculado:</span>
-                                        <span className="text-2xl font-bold text-[#0F4C5C]">€{(duration * hourlyRate).toFixed(2)}</span>
+                                    <div className="flex justify-between items-center mb-2">
+                                        <span className="text-gray-700">Precio Total:</span>
+                                        <span className="text-2xl font-bold text-[#0F4C5C]">€{hourlyRate.toFixed(2)}</span>
                                     </div>
-                                    <p className="text-xs text-gray-500 mt-2">({duration} días × €{hourlyRate}/hora)</p>
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-gray-600">Precio por Jornada:</span>
+                                        <span className="text-lg font-semibold text-[#0F4C5C]">€{(hourlyRate / duration).toFixed(2)}/jornada</span>
+                                    </div>
+                                    <p className="text-xs text-gray-500 mt-2">({duration} jornadas)</p>
                                 </div>
                             </CardContent>
                         </Card>

@@ -26,9 +26,11 @@ type Proposal = {
     project_id: string
     freelancer_id: string
     client_id: string
-    duration: number
-    hourly_rate: number
+    duration: number | null
+    hourly_rate: number | null
     total_amount: number
+    price_per_day: number | null
+    price_difference_percent: number | null
     status: 'pending' | 'negotiating' | 'accepted' | 'rejected'
     milestones: Array<{
         name: string
@@ -38,6 +40,7 @@ type Proposal = {
     }>
     created_at: string
     conversation_id?: string
+    has_proposal?: boolean
 }
 
 type ProjectDetails = {
@@ -57,6 +60,7 @@ type ClientDetails = {
 type ProposalDetails = {
     id: string
     verification_status: 'pending' | 'submitted' | 'approved' | 'rejected'
+    freelancer_daily_rate: number
     proposal: Proposal
     project: ProjectDetails
     client: ClientDetails
@@ -367,27 +371,72 @@ export default function ProposalDetailsPage({ params }: { params: Promise<{ id: 
                         <CardHeader>
                             <CardTitle>Términos Propuestos</CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="grid grid-cols-3 gap-4">
-                                <div>
-                                    <p className="text-sm text-gray-600 mb-1">Duración</p>
-                                    <p className="font-semibold text-lg flex items-center gap-2">
-                                        <Calendar className="h-4 w-4 text-gray-400" />
-                                        {proposal.proposal.duration ? `${proposal.proposal.duration} días` : 'Por definir'}
+                        <CardContent className="space-y-6">
+                            {/* Main terms grid */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="border rounded-lg p-4 bg-blue-50">
+                                    <p className="text-sm text-gray-600 mb-1">Número de Jornadas</p>
+                                    <p className="font-bold text-2xl text-[#0F4C5C]">
+                                        {proposal.proposal.duration || 'Por definir'}
                                     </p>
                                 </div>
-                                <div>
-                                    <p className="text-sm text-gray-600 mb-1">Tarifa Horaria</p>
-                                    <p className="font-semibold text-lg flex items-center gap-2">
-                                        <Euro className="h-4 w-4 text-gray-400" />
-                                        {proposal.proposal.hourly_rate ? `€${proposal.proposal.hourly_rate}/hora` : 'Por definir'}
+                                <div className="border rounded-lg p-4 bg-green-50">
+                                    <p className="text-sm text-gray-600 mb-1">Precio Total</p>
+                                    <p className="font-bold text-2xl text-[#0F4C5C]">
+                                        €{proposal.proposal.total_amount ? proposal.proposal.total_amount.toFixed(2) : '0.00'}
                                     </p>
                                 </div>
-                                <div>
-                                    <p className="text-sm text-gray-600 mb-1">Total</p>
-                                    <p className="font-semibold text-lg text-[#0F4C5C]">€{proposal.proposal.total_amount ? proposal.proposal.total_amount.toFixed(2) : '0.00'}</p>
+                                <div className="border rounded-lg p-4 bg-purple-50">
+                                    <p className="text-sm text-gray-600 mb-1">Precio por Jornada</p>
+                                    <p className="font-bold text-2xl text-[#0F4C5C]">
+                                        {proposal.proposal.price_per_day ? `€${proposal.proposal.price_per_day.toFixed(2)}` : 'Por definir'}
+                                    </p>
                                 </div>
                             </div>
+
+                            {/* Comparison with freelancer rate */}
+                            {proposal.proposal.price_per_day && proposal.freelancer_daily_rate > 0 && (
+                                <div className="border-2 rounded-lg p-4 bg-gray-50">
+                                    <div className="space-y-3">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-gray-700">Tu tarifa diaria:</span>
+                                            <span className="font-semibold text-lg">€{proposal.freelancer_daily_rate?.toFixed(2) || '0.00'}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-gray-700">Tarifa propuesta:</span>
+                                            <span className="font-semibold text-lg">€{proposal.proposal.price_per_day.toFixed(2)}</span>
+                                        </div>
+                                        <div className="border-t pt-3 flex justify-between items-center">
+                                            <span className="text-gray-700 font-semibold">Diferencia:</span>
+                                            <span className={`font-bold text-lg ${
+                                                proposal.proposal.price_difference_percent >= 0
+                                                    ? 'text-green-600'
+                                                    : 'text-red-600'
+                                            }`}>
+                                                {proposal.proposal.price_difference_percent >= 0 ? '+' : ''}
+                                                {proposal.proposal.price_difference_percent?.toFixed(1)}%
+                                            </span>
+                                        </div>
+                                        {proposal.proposal.price_difference_percent < 0 && (
+                                            <p className="text-xs text-red-600 mt-2">
+                                                ⚠️ Esta propuesta está por debajo de tu tarifa diaria configurada.
+                                            </p>
+                                        )}
+                                        {proposal.proposal.price_difference_percent > 0 && (
+                                            <p className="text-xs text-green-600 mt-2">
+                                                ✓ Esta propuesta está por encima de tu tarifa diaria configurada.
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                            {!proposal.freelancer_daily_rate && (
+                                <div className="border rounded-lg p-4 bg-yellow-50">
+                                    <p className="text-sm text-yellow-700">
+                                        ⚠️ Para ver la comparación con tu tarifa, por favor configúrala en tu perfil.
+                                    </p>
+                                </div>
+                            )}
 
                             {/* Milestones */}
                             {proposal.proposal.milestones && proposal.proposal.milestones.length > 0 && (
