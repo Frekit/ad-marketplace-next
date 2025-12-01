@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase';
+import { withDebugGuard } from '@/lib/debug-guard';
 
-export async function POST(req: NextRequest) {
+const handler = async (req: NextRequest) => {
   try {
     const supabase = createClient();
 
@@ -94,4 +95,6 @@ export async function POST(req: NextRequest) {
       error: error.message || 'Error creando tablas'
     }, { status: 500 });
   }
-}
+};
+
+export const POST = withDebugGuard(handler);

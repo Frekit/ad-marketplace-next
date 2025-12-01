@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { withDebugGuard } from "@/lib/debug-guard";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -119,7 +120,7 @@ const FREELANCERS = [
   },
 ];
 
-export async function POST(request: NextRequest) {
+const handler = async (request: NextRequest) => {
   try {
     const adminKey = request.headers.get("x-admin-key");
     if (adminKey !== process.env.ADMIN_SEED_KEY) {
@@ -212,4 +213,6 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+};
+
+export const POST = withDebugGuard(handler);

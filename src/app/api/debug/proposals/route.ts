@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase';
+import { withDebugGuard } from '@/lib/debug-guard';
 
-export async function GET(req: NextRequest) {
+const handler = async (req: NextRequest) => {
     try {
         const supabase = createClient();
 
@@ -80,4 +81,6 @@ export async function GET(req: NextRequest) {
             error: error.message
         }, { status: 500 });
     }
-}
+};
+
+export const GET = withDebugGuard(handler);
