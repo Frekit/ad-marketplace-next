@@ -18,6 +18,22 @@ type DashboardStats = {
     viewTrendDirection?: 'up' | 'down' | 'stable'
 }
 
+type EarningsStats = {
+    totalEarned: number
+    pendingEarnings: number
+    approvedEarnings: number
+    thisMonth: number
+    thisYear: number
+    averageInvoiceAmount: number
+    invoiceCount: number
+    invoiceBreakdown: {
+        paid: number
+        approved: number
+        pending: number
+        rejected: number
+    }
+}
+
 type Proposal = {
     id: string
     project: {
@@ -58,6 +74,7 @@ export default function FreelancerDashboard() {
     const { data: session } = useSession()
     const router = useRouter()
     const [stats, setStats] = useState<DashboardStats | null>(null)
+    const [earnings, setEarnings] = useState<EarningsStats | null>(null)
     const [proposals, setProposals] = useState<Proposal[]>([])
     const [tasks, setTasks] = useState<OnboardingTask[]>([])
     const [milestones, setMilestones] = useState<UpcomingMilestone[]>([])
@@ -65,6 +82,7 @@ export default function FreelancerDashboard() {
     const [loadingProposals, setLoadingProposals] = useState(true)
     const [loadingTasks, setLoadingTasks] = useState(true)
     const [loadingMilestones, setLoadingMilestones] = useState(true)
+    const [loadingEarnings, setLoadingEarnings] = useState(true)
     const [isRefreshing, setIsRefreshing] = useState(false)
     const userName = session?.user?.name || "Freelancer"
 
@@ -128,6 +146,13 @@ export default function FreelancerDashboard() {
                             ...prev,
                             activeProjects: data.count || 0
                         } : null)
+                    }
+                })(),
+                (async () => {
+                    const res = await fetch("/api/freelancer/stats/earnings")
+                    if (res.ok) {
+                        const data = await res.json()
+                        setEarnings(data.stats || null)
                     }
                 })()
             ])
@@ -256,11 +281,26 @@ export default function FreelancerDashboard() {
             }
         }
 
+        const fetchEarnings = async () => {
+            try {
+                const res = await fetch("/api/freelancer/stats/earnings")
+                if (res.ok) {
+                    const data = await res.json()
+                    setEarnings(data.stats || null)
+                }
+            } catch (error) {
+                console.error("Error fetching earnings:", error)
+            } finally {
+                setLoadingEarnings(false)
+            }
+        }
+
         fetchStats()
         fetchProposals()
         fetchTasks()
         fetchMilestones()
         fetchActiveProjects()
+        fetchEarnings()
     }, [])
 
     const profileCompletion = stats?.profileCompletion || 0
@@ -370,6 +410,60 @@ export default function FreelancerDashboard() {
                             </Card>
                         </div>
                     )}
+
+                    {/* Earnings Section */}
+                    {loadingEarnings ? (
+                        <div className="space-y-3">
+                            {[1, 2].map((i) => (
+                                <Card key={i} className="p-6 animate-pulse">
+                                    <div className="h-4 bg-muted rounded mb-2 w-1/2"></div>
+                                    <div className="h-8 bg-muted rounded mb-2"></div>
+                                    <div className="h-3 bg-muted rounded w-3/4"></div>
+                                </Card>
+                            ))}
+                        </div>
+                    ) : earnings ? (
+                        <div>
+                            <h2 className="text-xl font-bold text-text mb-4">Ganancias</h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <Card className="p-6">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="text-sm text-text-muted">Ganancia total</span>
+                                        <TrendingUp className="h-5 w-5 text-success" />
+                                    </div>
+                                    <div className="text-3xl font-bold text-text">€{earnings.totalEarned.toFixed(2)}</div>
+                                    <p className="text-xs text-text-muted mt-1">{earnings.invoiceCount} facturas pagadas</p>
+                                </Card>
+
+                                <Card className="p-6">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="text-sm text-text-muted">Este mes</span>
+                                        <Calendar className="h-5 w-5 text-text-muted" />
+                                    </div>
+                                    <div className="text-3xl font-bold text-text">€{earnings.thisMonth.toFixed(2)}</div>
+                                    <p className="text-xs text-text-muted mt-1">Ingresos de este mes</p>
+                                </Card>
+
+                                <Card className="p-6">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="text-sm text-text-muted">Ganancias pendientes</span>
+                                        <AlertCircle className="h-5 w-5 text-warning" />
+                                    </div>
+                                    <div className="text-3xl font-bold text-warning">€{earnings.pendingEarnings.toFixed(2)}</div>
+                                    <p className="text-xs text-text-muted mt-1">{earnings.invoiceBreakdown.pending} facturas en espera</p>
+                                </Card>
+
+                                <Card className="p-6">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="text-sm text-text-muted">Ganancia media por factura</span>
+                                        <Briefcase className="h-5 w-5 text-text-muted" />
+                                    </div>
+                                    <div className="text-3xl font-bold text-text">€{earnings.averageInvoiceAmount.toFixed(2)}</div>
+                                    <p className="text-xs text-text-muted mt-1">Basado en {earnings.invoiceCount} facturas</p>
+                                </Card>
+                            </div>
+                        </div>
+                    ) : null}
 
                     {/* My Proposals Section */}
                     <div>
