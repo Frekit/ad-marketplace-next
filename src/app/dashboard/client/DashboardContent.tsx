@@ -2,11 +2,12 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Wallet, Plus, Briefcase, Clock, TrendingUp, ArrowRight, LogOut, FileText, CheckCircle, XCircle, AlertCircle, Search, Bell, MessageSquare } from "lucide-react";
+import { Wallet, Plus, Briefcase, Clock, TrendingUp, ArrowRight, LogOut, FileText, CheckCircle, XCircle, AlertCircle, Search, Bell, MessageSquare, Star } from "lucide-react";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { useState, useEffect } from "react";
 
 interface Transaction {
     id: string;
@@ -16,6 +17,28 @@ interface Transaction {
     description: string;
     created_at: string;
     metadata: any;
+}
+
+interface ActiveProject {
+    id: string;
+    title: string;
+    description: string;
+    status: string;
+    budget: number;
+    proposalsReceived: number;
+    postedDate: string;
+    deadline: string | null;
+}
+
+interface RecommendedFreelancer {
+    id: string;
+    name: string;
+    skills: string[];
+    hourlyRate: number;
+    availability: string;
+    rating: number;
+    totalReviews: number;
+    completedProjects: number;
 }
 
 interface DashboardContentProps {
@@ -29,6 +52,43 @@ interface DashboardContentProps {
 }
 
 export default function DashboardContent({ balance, transactions, user }: DashboardContentProps) {
+    const [projects, setProjects] = useState<ActiveProject[]>([]);
+    const [freelancers, setFreelancers] = useState<RecommendedFreelancer[]>([]);
+    const [loadingProjects, setLoadingProjects] = useState(true);
+    const [loadingFreelancers, setLoadingFreelancers] = useState(true);
+
+    useEffect(() => {
+        const fetchProjects = async () => {
+            try {
+                const res = await fetch("/api/client/projects/active");
+                if (res.ok) {
+                    const data = await res.json();
+                    setProjects(data.projects || []);
+                }
+            } catch (error) {
+                console.error("Error fetching projects:", error);
+            } finally {
+                setLoadingProjects(false);
+            }
+        };
+
+        const fetchFreelancers = async () => {
+            try {
+                const res = await fetch("/api/client/freelancers/recommended");
+                if (res.ok) {
+                    const data = await res.json();
+                    setFreelancers(data.freelancers || []);
+                }
+            } catch (error) {
+                console.error("Error fetching freelancers:", error);
+            } finally {
+                setLoadingFreelancers(false);
+            }
+        };
+
+        fetchProjects();
+        fetchFreelancers();
+    }, []);
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString("en-US", {
             day: "numeric",
@@ -85,20 +145,60 @@ export default function DashboardContent({ balance, transactions, user }: Dashbo
                                 <h3 className="text-lg font-semibold text-text">Active Projects</h3>
                                 <Link href="/projects" className="text-sm text-primary hover:underline">View all</Link>
                             </div>
-                            <Card className="shadow-sm border-dashed border-2">
-                                <CardContent className="py-12 flex flex-col items-center justify-center text-center">
-                                    <div className="p-4 bg-muted rounded-full mb-4">
-                                        <Briefcase className="h-8 w-8 text-text-muted" />
-                                    </div>
-                                    <h4 className="text-lg font-medium text-text">No active projects</h4>
-                                    <p className="text-text-muted max-w-sm mt-2 mb-6">
-                                        You haven't posted any projects yet. Start by creating a brief for what you need.
-                                    </p>
-                                    <Link href="/projects/new">
-                                        <Button variant="outline">Post a Project</Button>
-                                    </Link>
-                                </CardContent>
-                            </Card>
+                            {loadingProjects ? (
+                                <div className="space-y-3">
+                                    {[1, 2].map((i) => (
+                                        <Card key={i} className="shadow-sm animate-pulse">
+                                            <CardContent className="p-5">
+                                                <div className="h-4 bg-muted rounded mb-2 w-1/2"></div>
+                                                <div className="h-3 bg-muted rounded w-3/4"></div>
+                                            </CardContent>
+                                        </Card>
+                                    ))}
+                                </div>
+                            ) : projects.length > 0 ? (
+                                <div className="space-y-3">
+                                    {projects.map((project) => (
+                                        <Link key={project.id} href={`/projects/${project.id}`}>
+                                            <Card className="shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+                                                <CardContent className="p-5">
+                                                    <div className="flex items-start justify-between">
+                                                        <div className="flex-1">
+                                                            <h4 className="font-semibold text-text">{project.title}</h4>
+                                                            <p className="text-sm text-text-muted mt-1">{project.description?.substring(0, 100)}</p>
+                                                            <div className="flex items-center gap-4 mt-3">
+                                                                <span className="text-xs text-text-muted">
+                                                                    Budget: <span className="font-medium">€{project.budget.toFixed(2)}</span>
+                                                                </span>
+                                                                <span className="text-xs text-text-muted">
+                                                                    Proposals: <span className="font-medium">{project.proposalsReceived}</span>
+                                                                </span>
+                                                                <Badge variant="outline" className="text-xs capitalize">{project.status}</Badge>
+                                                            </div>
+                                                        </div>
+                                                        <ArrowRight className="h-5 w-5 text-text-muted" />
+                                                    </div>
+                                                </CardContent>
+                                            </Card>
+                                        </Link>
+                                    ))}
+                                </div>
+                            ) : (
+                                <Card className="shadow-sm border-dashed border-2">
+                                    <CardContent className="py-12 flex flex-col items-center justify-center text-center">
+                                        <div className="p-4 bg-muted rounded-full mb-4">
+                                            <Briefcase className="h-8 w-8 text-text-muted" />
+                                        </div>
+                                        <h4 className="text-lg font-medium text-text">No active projects</h4>
+                                        <p className="text-text-muted max-w-sm mt-2 mb-6">
+                                            You haven't posted any projects yet. Start by creating a brief for what you need.
+                                        </p>
+                                        <Link href="/projects/new">
+                                            <Button variant="outline">Post a Project</Button>
+                                        </Link>
+                                    </CardContent>
+                                </Card>
+                            )}
                         </section>
 
                         {/* Suggested Freelancers */}
@@ -107,32 +207,74 @@ export default function DashboardContent({ balance, transactions, user }: Dashbo
                                 <h3 className="text-lg font-semibold text-text">Top Freelancers for You</h3>
                                 <Link href="/freelancers" className="text-sm text-primary hover:underline">Browse all</Link>
                             </div>
-                            <div className="grid sm:grid-cols-2 gap-4">
-                                {[1, 2].map((i) => (
-                                    <Card key={i} className="hover:shadow-md transition-all cursor-pointer group">
-                                        <CardContent className="p-5">
-                                            <div className="flex items-start gap-4">
-                                                <Avatar className="h-12 w-12 border-2 border-surface shadow-sm">
-                                                    <AvatarFallback>JD</AvatarFallback>
-                                                </Avatar>
-                                                <div>
-                                                    <h4 className="font-semibold text-text group-hover:text-primary transition-colors">John Doe</h4>
-                                                    <p className="text-xs text-text-muted">Senior Google Ads Specialist</p>
-                                                    <div className="flex items-center gap-1 mt-1">
-                                                        <span className="text-xs font-medium bg-success/30 text-success px-2 py-0.5 rounded-full">Available</span>
-                                                        <span className="text-xs text-text-muted">• €65/hr</span>
+                            {loadingFreelancers ? (
+                                <div className="grid sm:grid-cols-2 gap-4">
+                                    {[1, 2].map((i) => (
+                                        <Card key={i} className="animate-pulse">
+                                            <CardContent className="p-5">
+                                                <div className="h-4 bg-muted rounded mb-2 w-1/2"></div>
+                                                <div className="h-3 bg-muted rounded w-3/4"></div>
+                                            </CardContent>
+                                        </Card>
+                                    ))}
+                                </div>
+                            ) : freelancers.length > 0 ? (
+                                <div className="grid sm:grid-cols-2 gap-4">
+                                    {freelancers.map((freelancer) => (
+                                        <Link key={freelancer.id} href={`/freelancers/${freelancer.id}`}>
+                                            <Card className="hover:shadow-md transition-all cursor-pointer group">
+                                                <CardContent className="p-5">
+                                                    <div className="flex items-start gap-4">
+                                                        <Avatar className="h-12 w-12 border-2 border-surface shadow-sm">
+                                                            <AvatarFallback>{freelancer.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                                                        </Avatar>
+                                                        <div className="flex-1">
+                                                            <h4 className="font-semibold text-text group-hover:text-primary transition-colors">{freelancer.name}</h4>
+                                                            <div className="flex items-center gap-1 mt-1">
+                                                                {freelancer.rating > 0 && (
+                                                                    <>
+                                                                        <Star className="h-3 w-3 fill-warning text-warning" />
+                                                                        <span className="text-xs font-medium">{freelancer.rating.toFixed(1)}</span>
+                                                                        <span className="text-xs text-text-muted">({freelancer.totalReviews})</span>
+                                                                    </>
+                                                                )}
+                                                            </div>
+                                                            <div className="flex items-center gap-2 mt-2">
+                                                                <Badge className={`text-xs font-normal ${
+                                                                    freelancer.availability === 'available' ? 'bg-success/30 text-success' : 'bg-warning/30 text-warning'
+                                                                }`}>
+                                                                    {freelancer.availability}
+                                                                </Badge>
+                                                                <span className="text-xs text-text-muted">€{freelancer.hourlyRate}/hr</span>
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            </div>
-                                            <div className="mt-4 flex flex-wrap gap-2">
-                                                <Badge variant="secondary" className="text-xs font-normal">Google Ads</Badge>
-                                                <Badge variant="secondary" className="text-xs font-normal">SEM</Badge>
-                                                <Badge variant="secondary" className="text-xs font-normal">Analytics</Badge>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                ))}
-                            </div>
+                                                    <div className="mt-4 flex flex-wrap gap-2">
+                                                        {freelancer.skills.slice(0, 3).map((skill) => (
+                                                            <Badge key={skill} variant="secondary" className="text-xs font-normal">
+                                                                {skill}
+                                                            </Badge>
+                                                        ))}
+                                                        {freelancer.skills.length > 3 && (
+                                                            <Badge variant="secondary" className="text-xs font-normal">
+                                                                +{freelancer.skills.length - 3}
+                                                            </Badge>
+                                                        )}
+                                                    </div>
+                                                </CardContent>
+                                            </Card>
+                                        </Link>
+                                    ))}
+                                </div>
+                            ) : (
+                                <Card className="p-8 text-center border-dashed border-2">
+                                    <div className="p-4 bg-muted rounded-full mb-4 mx-auto w-fit">
+                                        <Briefcase className="h-8 w-8 text-text-muted" />
+                                    </div>
+                                    <p className="text-text font-medium">No freelancers found</p>
+                                    <p className="text-sm text-text-muted mt-2">Create a project first to get freelancer recommendations</p>
+                                </Card>
+                            )}
                         </section>
                     </div>
 
