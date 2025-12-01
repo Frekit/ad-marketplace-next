@@ -43,14 +43,20 @@ export async function POST(req: NextRequest): Promise<NextResponse<TrackViewResp
         // This prevents inflating view count from page reloads
         const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
 
-        const { data: recentViews, error: checkError } = await supabase
+        let query = supabase
             .from('profile_views')
             .select('id')
             .eq('freelancer_id', freelancerId)
-            .eq('viewer_type', viewerType)
-            ...(viewerId && viewerType !== 'guest'
-                ? { eq: { viewer_id: viewerId } }
-                : { is: { viewer_id: null } })
+            .eq('viewer_type', viewerType);
+
+        // Add viewer_id filter based on whether user is logged in
+        if (viewerId && viewerType !== 'guest') {
+            query = query.eq('viewer_id', viewerId);
+        } else {
+            query = query.is('viewer_id', null);
+        }
+
+        const { data: recentViews, error: checkError } = await query
             .gt('viewed_at', oneHourAgo)
             .limit(1);
 

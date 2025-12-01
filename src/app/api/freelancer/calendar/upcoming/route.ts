@@ -75,7 +75,7 @@ export async function GET(req: NextRequest): Promise<NextResponse<CalendarRespon
 
         // Get project titles for the milestones
         const projectMap = new Map(
-            projects.map(p => [p.project_id, p.projects?.title || 'Unknown Project'])
+            projects.map((p: any) => [p.project_id, p.projects?.title || 'Unknown Project'])
         );
 
         // Transform and format the data
