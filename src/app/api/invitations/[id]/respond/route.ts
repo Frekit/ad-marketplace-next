@@ -27,7 +27,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
         // Get invitation details
         const { data: invitation, error: invitationError } = await supabase
-            .from('invitations')
+            .from('project_invitations')
             .select(`
                 *,
                 projects (
@@ -66,7 +66,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         if (action === 'reject') {
             // Simply update invitation status
             await supabase
-                .from('invitations')
+                .from('project_invitations')
                 .update({ status: 'rejected', updated_at: new Date().toISOString() })
                 .eq('id', invitationId);
 
@@ -84,7 +84,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
         // Update invitation status
         const { error: updateError } = await supabase
-            .from('invitations')
+            .from('project_invitations')
             .update({ status: 'accepted', updated_at: new Date().toISOString() })
             .eq('id', invitationId);
 
@@ -110,7 +110,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         if (contractError) {
             // Rollback invitation status
             await supabase
-                .from('invitations')
+                .from('project_invitations')
                 .update({ status: 'pending' })
                 .eq('id', invitationId);
             throw contractError;

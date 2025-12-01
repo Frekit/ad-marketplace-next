@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
 
         // Fetch project invitations for this freelancer with relationships
         const { data: invitations, error } = await supabase
-            .from('invitations')
+            .from('project_invitations')
             .select(`
                 id,
                 status,
@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
                     allocated_budget,
                     created_at
                 ),
-                client:users!invitations_client_id_fkey (
+                client:users!project_invitations_client_id_fkey (
                     id,
                     first_name,
                     last_name,

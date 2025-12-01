@@ -55,7 +55,7 @@ export async function POST(
 
         // Verify invitation exists and belongs to this freelancer
         const { data: invitation, error: invError } = await supabase
-            .from('invitations')
+            .from('project_invitations')
             .select(`
                 id,
                 project_id,
@@ -106,7 +106,7 @@ export async function POST(
 
         // Update invitation status to 'offer_submitted'
         await supabase
-            .from('invitations')
+            .from('project_invitations')
             .update({ status: 'offer_submitted' })
             .eq('id', invitationId);
 

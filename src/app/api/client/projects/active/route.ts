@@ -47,7 +47,7 @@ export async function GET(req: NextRequest): Promise<NextResponse<ActiveProjects
         const projectsWithCounts = await Promise.all(
             (projects || []).map(async (project) => {
                 const { count: proposalCount } = await supabase
-                    .from('invitations')
+                    .from('project_invitations')
                     .select('*', { count: 'exact', head: true })
                     .eq('project_id', project.id)
                     .in('status', ['pending', 'offer_submitted']);

@@ -46,7 +46,7 @@ export async function GET(
 
     // Get the invitation for this freelancer (which may or may not have a proposal yet)
     const { data: invitation, error: invitationError } = await supabase
-      .from('invitations')
+      .from('project_invitations')
       .select(`
         id,
         status,
@@ -54,10 +54,7 @@ export async function GET(
         created_at,
         project_id,
         freelancer_id,
-        client_id,
-        estimated_days,
-        hourly_rate,
-        suggested_milestones
+        client_id
       `)
       .eq('id', proposalId)
       .eq('freelancer_id', session.user.id)
@@ -69,8 +66,6 @@ export async function GET(
       invitation: invitation ? {
         id: invitation.id,
         project_id: invitation.project_id,
-        estimated_days: invitation.estimated_days,
-        hourly_rate: invitation.hourly_rate,
         status: invitation.status
       } : null,
       invitationError
@@ -127,19 +122,12 @@ export async function GET(
       proposalDetails = proposal;
     }
 
-    // Use invitation data as fallback if no proposal details exist
-    if (!proposalDetails && invitation) {
-      const totalBudget = (invitation.estimated_days || 0) * (invitation.hourly_rate || 0);
-      proposalDetails = {
-        id: invitation.id,
-        original_estimated_days: invitation.estimated_days,
-        original_hourly_rate: invitation.hourly_rate,
-        original_total_budget: totalBudget,
-        original_suggested_milestones: invitation.suggested_milestones || [],
-        status: invitation.status,
-        conversation_id: null,
-        created_at: invitation.created_at
-      };
+    // If no proposal found, return error - proposal must exist for freelancer to accept
+    if (!proposalDetails) {
+      return NextResponse.json(
+        { error: 'Proposal not found for this invitation' },
+        { status: 404 }
+      );
     }
 
     const proposal = invitation;
