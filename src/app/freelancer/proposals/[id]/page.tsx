@@ -175,7 +175,8 @@ export default function ProposalDetailsPage({ params }: { params: Promise<{ id: 
 
         try {
             // Accept the proposal and submit an offer using the same terms
-            const res = await fetch(`/api/freelancer/proposals/${proposal.proposal.id}/offer`, {
+            // Use the invitation ID (proposal.id) not the project_proposals ID
+            const res = await fetch(`/api/freelancer/proposals/${proposal.id}/offer`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
