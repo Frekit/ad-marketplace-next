@@ -29,6 +29,14 @@ export async function PATCH(
             .eq('id', notificationId)
             .single();
 
+        // If notifications table doesn't exist, return not found
+        if (fetchError?.code === 'PGRST205') {
+            return NextResponse.json(
+                { error: 'Notification system not yet initialized' },
+                { status: 404 }
+            );
+        }
+
         if (fetchError || !notification) {
             return NextResponse.json(
                 { error: 'Notification not found' },

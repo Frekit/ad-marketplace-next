@@ -50,6 +50,22 @@ export async function GET(req: NextRequest) {
 
         const { data: notifications, count, error } = await query;
 
+        // If notifications table doesn't exist, return empty list instead of error
+        if (error?.code === 'PGRST205') {
+            console.warn('Notifications table not yet created. Migration needs to be applied in Supabase.');
+            const response = NextResponse.json({
+                notifications: [],
+                total: 0,
+                limit,
+                offset,
+                _warning: 'Notifications table not yet created. Please apply the migration.'
+            });
+
+            const responseWithHeaders = addRateLimitHeaders(response, rateLimit.headers);
+            logRequest('GET', '/api/notifications', 200, Date.now() - startTime, req, session?.user?.id);
+            return responseWithHeaders;
+        }
+
         if (error) {
             throw error;
         }

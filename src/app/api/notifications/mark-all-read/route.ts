@@ -22,6 +22,13 @@ export async function POST(req: NextRequest) {
             .eq('user_id', session.user.id)
             .eq('read', false);
 
+        // If notifications table doesn't exist, return success silently
+        if (error?.code === 'PGRST205') {
+            return NextResponse.json({
+                message: 'All notifications marked as read'
+            });
+        }
+
         if (error) {
             throw error;
         }
