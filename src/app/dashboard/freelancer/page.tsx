@@ -84,6 +84,7 @@ export default function FreelancerDashboard() {
     const [loadingMilestones, setLoadingMilestones] = useState(true)
     const [loadingEarnings, setLoadingEarnings] = useState(true)
     const [isRefreshing, setIsRefreshing] = useState(false)
+    const [period, setPeriod] = useState<7 | 30 | 90>(30)
     const userName = session?.user?.name || "Freelancer"
 
     const handleRefresh = async () => {
@@ -102,7 +103,7 @@ export default function FreelancerDashboard() {
                     }
                 })(),
                 (async () => {
-                    const res = await fetch("/api/freelancer/stats/profile-views")
+                    const res = await fetch(`/api/freelancer/stats/profile-views?period=${period}`)
                     if (res.ok) {
                         const data = await res.json()
                         setStats(prev => prev ? {
@@ -303,6 +304,27 @@ export default function FreelancerDashboard() {
         fetchEarnings()
     }, [])
 
+    // Refetch stats when period changes
+    useEffect(() => {
+        const fetchViewsWithPeriod = async () => {
+            try {
+                const res = await fetch(`/api/freelancer/stats/profile-views?period=${period}`)
+                if (res.ok) {
+                    const data = await res.json()
+                    setStats(prev => prev ? {
+                        ...prev,
+                        profileViews: data.stats?.totalViews || 0,
+                        viewTrend: data.stats?.trend || 0,
+                        viewTrendDirection: data.stats?.trendDirection || 'stable'
+                    } : null)
+                }
+            } catch (error) {
+                console.error("Error fetching profile views with period:", error)
+            }
+        }
+        fetchViewsWithPeriod()
+    }, [period])
+
     const profileCompletion = stats?.profileCompletion || 0
 
     return (
@@ -353,6 +375,31 @@ export default function FreelancerDashboard() {
                                 Completar mi perfil
                             </Button>
                         </div>
+                    </div>
+
+                    {/* Period Selector */}
+                    <div className="flex gap-2">
+                        <Button
+                            onClick={() => setPeriod(7)}
+                            variant={period === 7 ? "default" : "outline"}
+                            size="sm"
+                        >
+                            Últimos 7 días
+                        </Button>
+                        <Button
+                            onClick={() => setPeriod(30)}
+                            variant={period === 30 ? "default" : "outline"}
+                            size="sm"
+                        >
+                            Últimos 30 días
+                        </Button>
+                        <Button
+                            onClick={() => setPeriod(90)}
+                            variant={period === 90 ? "default" : "outline"}
+                            size="sm"
+                        >
+                            Últimos 90 días
+                        </Button>
                     </div>
 
                     {/* Stats Cards */}
