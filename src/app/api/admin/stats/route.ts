@@ -47,12 +47,25 @@ export async function GET(req: NextRequest) {
         const approvedInvoices = invoices?.filter(i => i.status === 'approved').length || 0
         const paidInvoices = invoices?.filter(i => i.status === 'paid').length || 0
         const rejectedInvoices = invoices?.filter(i => i.status === 'rejected').length || 0
-        const totalRevenue = invoices?.reduce((sum, i) => sum + (i.total_amount_eur || 0), 0) || 0
+        // Only count revenue from PAID invoices
+        const totalRevenue = invoices?.reduce((sum, i) => {
+            return i.status === 'paid' ? sum + (i.total_amount_eur || 0) : sum
+        }, 0) || 0
         const totalUsers = users?.length || 0
         const totalProjects = projects?.length || 0
         const totalFreelancers = freelancers?.length || 0
         const totalClients = clients?.length || 0
         const pendingVerifications = verificationRequests?.length || 0
+
+        // Calculate revenue from approved invoices (pending payment)
+        const approvedRevenue = invoices?.reduce((sum, i) => {
+            return i.status === 'approved' ? sum + (i.total_amount_eur || 0) : sum
+        }, 0) || 0
+
+        // Calculate total invoiced amount
+        const totalInvoicedAmount = invoices?.reduce((sum, i) => {
+            return i.status !== 'rejected' ? sum + (i.total_amount_eur || 0) : sum
+        }, 0) || 0
 
         return NextResponse.json({
             totalInvoices,
@@ -61,6 +74,8 @@ export async function GET(req: NextRequest) {
             paidInvoices,
             rejectedInvoices,
             totalRevenue,
+            approvedRevenue,
+            totalInvoicedAmount,
             totalUsers,
             totalProjects,
             totalFreelancers,
@@ -72,6 +87,11 @@ export async function GET(req: NextRequest) {
                 approved: approvedInvoices,
                 paid: paidInvoices,
                 rejected: rejectedInvoices,
+            },
+            revenueBreakdown: {
+                paid: totalRevenue,
+                approved: approvedRevenue,
+                invoiced: totalInvoicedAmount,
             },
         })
 

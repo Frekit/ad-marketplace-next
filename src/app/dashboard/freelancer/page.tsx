@@ -3,7 +3,7 @@
 import FreelancerLayout from "@/components/layouts/FreelancerLayout"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { CheckCircle2, AlertCircle, Calendar, TrendingUp, Users, MessageSquare, Briefcase, Clock, ArrowRight } from "lucide-react"
+import { CheckCircle2, AlertCircle, Calendar, TrendingUp, Users, MessageSquare, Briefcase, Clock, ArrowRight, ArrowUpRight, ArrowDownRight } from "lucide-react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
@@ -14,6 +14,8 @@ type DashboardStats = {
     activeProjects: number
     profileCompletion: number
     missingFields?: string[]
+    viewTrend?: number
+    viewTrendDirection?: 'up' | 'down' | 'stable'
 }
 
 type Proposal = {
@@ -42,21 +44,33 @@ type OnboardingTask = {
     icon: string
 }
 
+type UpcomingMilestone = {
+    id: string
+    projectId: string
+    projectTitle: string
+    milestoneName: string
+    dueDate: string
+    amount: number
+    daysUntilDue: number
+}
+
 export default function FreelancerDashboard() {
     const { data: session } = useSession()
     const router = useRouter()
     const [stats, setStats] = useState<DashboardStats | null>(null)
     const [proposals, setProposals] = useState<Proposal[]>([])
     const [tasks, setTasks] = useState<OnboardingTask[]>([])
+    const [milestones, setMilestones] = useState<UpcomingMilestone[]>([])
     const [loading, setLoading] = useState(true)
     const [loadingProposals, setLoadingProposals] = useState(true)
     const [loadingTasks, setLoadingTasks] = useState(true)
+    const [loadingMilestones, setLoadingMilestones] = useState(true)
     const userName = session?.user?.name || "Freelancer"
 
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                // Fetch profile completion separately
+                // Fetch profile completion
                 const completionRes = await fetch("/api/freelancer/profile/completion")
                 let profileCompletion = 0
                 let missingFields: string[] = []
@@ -67,12 +81,27 @@ export default function FreelancerDashboard() {
                     missingFields = completionData.missingFields || []
                 }
 
+                // Fetch profile views statistics
+                const viewsRes = await fetch("/api/freelancer/stats/profile-views")
+                let profileViews = 0
+                let viewTrend = 0
+                let viewTrendDirection: 'up' | 'down' | 'stable' = 'stable'
+
+                if (viewsRes.ok) {
+                    const viewsData = await viewsRes.json()
+                    profileViews = viewsData.stats?.totalViews || 0
+                    viewTrend = viewsData.stats?.trend || 0
+                    viewTrendDirection = viewsData.stats?.trendDirection || 'stable'
+                }
+
                 setStats({
-                    profileViews: 0,
+                    profileViews,
                     proposalsReceived: 0,
                     activeProjects: 0,
                     profileCompletion,
                     missingFields,
+                    viewTrend,
+                    viewTrendDirection,
                 })
             } catch (error) {
                 console.error("Error fetching stats:", error)
@@ -125,9 +154,24 @@ export default function FreelancerDashboard() {
             }
         }
 
+        const fetchMilestones = async () => {
+            try {
+                const res = await fetch("/api/freelancer/calendar/upcoming")
+                if (res.ok) {
+                    const data = await res.json()
+                    setMilestones(data.milestones || [])
+                }
+            } catch (error) {
+                console.error("Error fetching milestones:", error)
+            } finally {
+                setLoadingMilestones(false)
+            }
+        }
+
         fetchStats()
         fetchProposals()
         fetchTasks()
+        fetchMilestones()
     }, [])
 
     const profileCompletion = stats?.profileCompletion || 0
@@ -189,7 +233,21 @@ export default function FreelancerDashboard() {
                                     <span className="text-sm text-text-muted">Vistas del perfil</span>
                                     <Users className="h-5 w-5 text-text-muted" />
                                 </div>
-                                <div className="text-3xl font-bold text-text">{stats?.profileViews || 0}</div>
+                                <div className="flex items-end justify-between">
+                                    <div className="text-3xl font-bold text-text">{stats?.profileViews || 0}</div>
+                                    {stats?.viewTrend !== undefined && stats.viewTrend !== 0 && (
+                                        <div className={`flex items-center gap-1 text-sm font-medium ${
+                                            stats.viewTrendDirection === 'up' ? 'text-success' : 'text-danger'
+                                        }`}>
+                                            {stats.viewTrendDirection === 'up' ? (
+                                                <ArrowUpRight className="h-4 w-4" />
+                                            ) : (
+                                                <ArrowDownRight className="h-4 w-4" />
+                                            )}
+                                            {Math.abs(stats.viewTrend)}%
+                                        </div>
+                                    )}
+                                </div>
                                 <p className="text-xs text-text-muted mt-1">En los últimos 30 días</p>
                             </Card>
 
@@ -328,17 +386,65 @@ export default function FreelancerDashboard() {
                         )}
                     </div>
 
-                    {/* Calendar Section */}
-                    <Card className="p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-xl font-bold text-text">Mi calendario</h2>
-                            <Button variant="outline" size="sm">Ver calendario</Button>
-                        </div>
-                        <div className="text-center py-12 text-text-muted">
-                            <Calendar className="h-12 w-12 mx-auto mb-4 text-text-muted" />
-                            <p>No tienes eventos próximos</p>
-                        </div>
-                    </Card>
+                    {/* Calendar Section - Upcoming Milestones */}
+                    <div>
+                        <h2 className="text-xl font-bold text-text mb-4">Próximos Hitos</h2>
+                        {loadingMilestones ? (
+                            <div className="space-y-3">
+                                {[1, 2].map((i) => (
+                                    <Card key={i} className="p-4 animate-pulse">
+                                        <div className="h-4 bg-muted rounded mb-2 w-1/2"></div>
+                                        <div className="h-3 bg-muted rounded w-3/4"></div>
+                                    </Card>
+                                ))}
+                            </div>
+                        ) : milestones.length > 0 ? (
+                            <div className="space-y-3">
+                                {milestones.map((milestone) => {
+                                    const isUrgent = milestone.daysUntilDue <= 3
+                                    const isWarning = milestone.daysUntilDue <= 7
+
+                                    return (
+                                        <Card
+                                            key={milestone.id}
+                                            className={`p-4 border-l-4 ${
+                                                isUrgent ? 'border-l-danger bg-danger/5' :
+                                                    isWarning ? 'border-l-warning bg-warning/5' :
+                                                        'border-l-accent bg-accent/5'
+                                            }`}
+                                        >
+                                            <div className="flex items-start justify-between">
+                                                <div className="flex-1">
+                                                    <h3 className="font-semibold text-text">{milestone.milestoneName}</h3>
+                                                    <p className="text-sm text-text-muted mt-1">{milestone.projectTitle}</p>
+                                                    <div className="flex items-center gap-4 mt-3">
+                                                        <span className="text-xs text-text-muted flex items-center gap-1">
+                                                            <Calendar className="h-3 w-3" />
+                                                            {new Date(milestone.dueDate).toLocaleDateString('es-ES')}
+                                                        </span>
+                                                        <span className={`text-xs font-medium px-2 py-1 rounded-full ${
+                                                            isUrgent ? 'bg-danger/20 text-danger' :
+                                                                isWarning ? 'bg-warning/20 text-warning' :
+                                                                    'bg-success/20 text-success'
+                                                        }`}>
+                                                            {milestone.daysUntilDue} días
+                                                        </span>
+                                                        <span className="text-sm font-medium text-text-secondary">€{milestone.amount.toFixed(2)}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </Card>
+                                    );
+                                })}
+                            </div>
+                        ) : (
+                            <Card className="p-8 text-center">
+                                <Calendar className="h-12 w-12 mx-auto mb-4 text-text-muted" />
+                                <p className="text-text font-medium">No tienes hitos próximos</p>
+                                <p className="text-sm text-text-muted mt-2">Cuando comiences un proyecto, verás los hitos aquí</p>
+                            </Card>
+                        )}
+                    </div>
                 </div>
             </div>
         </FreelancerLayout>
