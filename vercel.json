@@ -1,0 +1,46 @@
+{
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "pnpm install",
+  "env": [
+    "SUPABASE_URL",
+    "SUPABASE_ANON_KEY",
+    "NEXTAUTH_SECRET",
+    "NEXTAUTH_URL"
+  ],
+  "headers": [
+    {
+      "source": "/api/freelancer/dashboard/overview",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=60, s-maxage=300, stale-while-revalidate=600"
+        }
+      ]
+    },
+    {
+      "source": "/api/freelancer/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=30, s-maxage=120, stale-while-revalidate=300"
+        }
+      ]
+    },
+    {
+      "source": "/dashboard/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, s-maxage=60, stale-while-revalidate=120"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
+    }
+  ]
+}

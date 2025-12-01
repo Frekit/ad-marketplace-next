@@ -44,12 +44,24 @@ export default function FreelancerDashboard() {
     const [isRefreshing, setIsRefreshing] = useState(false)
     const userName = session?.user?.name || "Freelancer"
 
-    // Use single API call to fetch all dashboard data at once
+    // Use single API call with aggressive caching
     const fetchDashboardData = useCallback(async () => {
+        const startTime = performance.now()
         try {
-            const res = await fetch("/api/freelancer/dashboard/overview")
+            const res = await fetch("/api/freelancer/dashboard/overview", {
+                headers: {
+                    'Accept-Encoding': 'gzip, deflate, br',
+                    'Cache-Control': 'max-age=60'
+                }
+            })
             if (res.ok) {
                 const dashboardData = await res.json()
+                const loadTime = performance.now() - startTime
+
+                // Log cache performance
+                const cacheStatus = res.headers.get('X-Cache') || 'UNKNOWN'
+                console.log(`[Dashboard] ${cacheStatus} - Load time: ${loadTime.toFixed(1)}ms`)
+
                 setData(dashboardData)
             }
         } catch (error) {
