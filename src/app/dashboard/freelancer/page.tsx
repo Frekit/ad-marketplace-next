@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { CheckCircle2, AlertCircle, Calendar, TrendingUp, Users, MessageSquare, Briefcase, Clock, ArrowRight } from "lucide-react"
 import { useSession } from "next-auth/react"
+import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 
 type DashboardStats = {
@@ -12,6 +13,7 @@ type DashboardStats = {
     proposalsReceived: number
     activeProjects: number
     profileCompletion: number
+    missingFields?: string[]
 }
 
 type Proposal = {
@@ -31,35 +33,47 @@ type Proposal = {
     created_at: string
 }
 
+type OnboardingTask = {
+    type: string
+    label: string
+    description: string
+    completed: boolean
+    url: string
+    icon: string
+}
+
 export default function FreelancerDashboard() {
     const { data: session } = useSession()
+    const router = useRouter()
     const [stats, setStats] = useState<DashboardStats | null>(null)
     const [proposals, setProposals] = useState<Proposal[]>([])
+    const [tasks, setTasks] = useState<OnboardingTask[]>([])
     const [loading, setLoading] = useState(true)
     const [loadingProposals, setLoadingProposals] = useState(true)
+    const [loadingTasks, setLoadingTasks] = useState(true)
     const userName = session?.user?.name || "Freelancer"
 
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                const res = await fetch("/api/freelancer/profile")
-                if (res.ok) {
-                    const data = await res.json()
-                    setStats({
-                        profileViews: data.profileViews || 0,
-                        proposalsReceived: data.proposalsReceived || 0,
-                        activeProjects: data.activeProjects || 0,
-                        profileCompletion: data.profileCompletion || 0,
-                    })
-                } else {
-                    // Fallback to default stats if API call fails
-                    setStats({
-                        profileViews: 0,
-                        proposalsReceived: 0,
-                        activeProjects: 0,
-                        profileCompletion: 0,
-                    })
+                // Fetch profile completion separately
+                const completionRes = await fetch("/api/freelancer/profile/completion")
+                let profileCompletion = 0
+                let missingFields: string[] = []
+
+                if (completionRes.ok) {
+                    const completionData = await completionRes.json()
+                    profileCompletion = completionData.completionPercentage || 0
+                    missingFields = completionData.missingFields || []
                 }
+
+                setStats({
+                    profileViews: 0,
+                    proposalsReceived: 0,
+                    activeProjects: 0,
+                    profileCompletion,
+                    missingFields,
+                })
             } catch (error) {
                 console.error("Error fetching stats:", error)
                 setStats({
@@ -97,8 +111,23 @@ export default function FreelancerDashboard() {
             }
         }
 
+        const fetchTasks = async () => {
+            try {
+                const res = await fetch("/api/freelancer/onboarding/tasks")
+                if (res.ok) {
+                    const data = await res.json()
+                    setTasks(data.tasks || [])
+                }
+            } catch (error) {
+                console.error("Error fetching tasks:", error)
+            } finally {
+                setLoadingTasks(false)
+            }
+        }
+
         fetchStats()
         fetchProposals()
+        fetchTasks()
     }, [])
 
     const profileCompletion = stats?.profileCompletion || 0
@@ -221,7 +250,10 @@ export default function FreelancerDashboard() {
                                                     </span>
                                                 </div>
                                             </div>
-                                            <Button className="ml-4 bg-accent hover:bg-accent/90 text-white">
+                                            <Button
+                                                onClick={() => router.push(`/freelancer/proposals/${proposal.id}`)}
+                                                className="ml-4 bg-accent hover:bg-accent/90 text-white"
+                                            >
                                                 Ver detalles
                                                 <ArrowRight className="w-4 h-4 ml-2" />
                                             </Button>
@@ -241,46 +273,59 @@ export default function FreelancerDashboard() {
                     {/* Action Required Section */}
                     <div>
                         <h2 className="text-xl font-bold text-text mb-4">Tareas por hacer</h2>
-                        <div className="space-y-3">
-                            <Card className="p-4 flex items-center justify-between hover:shadow-md transition-shadow">
-                                <div className="flex items-center gap-4">
-                                    <div className="h-10 w-10 bg-accent/20 rounded-full flex items-center justify-center">
-                                        <CheckCircle2 className="h-5 w-5 text-accent" />
-                                    </div>
-                                    <div>
-                                        <h3 className="font-medium text-text">Añade una descripción a tu perfil</h3>
-                                        <p className="text-sm text-text-muted">Cuéntale a los clientes quién eres y qué haces</p>
-                                    </div>
-                                </div>
-                                <Button variant="outline" size="sm">Completar</Button>
+                        {loadingTasks ? (
+                            <div className="space-y-3">
+                                {[1, 2].map((i) => (
+                                    <Card key={i} className="p-4 animate-pulse">
+                                        <div className="h-4 bg-muted rounded mb-2 w-1/2"></div>
+                                        <div className="h-3 bg-muted rounded w-3/4"></div>
+                                    </Card>
+                                ))}
+                            </div>
+                        ) : tasks.length > 0 ? (
+                            <div className="space-y-3">
+                                {tasks.map((task) => (
+                                    <Card
+                                        key={task.type}
+                                        className={`p-4 flex items-center justify-between hover:shadow-md transition-shadow ${
+                                            task.completed ? 'opacity-60' : ''
+                                        }`}
+                                    >
+                                        <div className="flex items-center gap-4 flex-1">
+                                            <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
+                                                task.completed ? 'bg-success/20' : 'bg-accent/20'
+                                            }`}>
+                                                <CheckCircle2 className={`h-5 w-5 ${
+                                                    task.completed ? 'text-success' : 'text-accent'
+                                                }`} />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-medium text-text">{task.label}</h3>
+                                                <p className="text-sm text-text-muted">{task.description}</p>
+                                            </div>
+                                        </div>
+                                        {!task.completed && (
+                                            <Button
+                                                onClick={() => router.push(task.url)}
+                                                variant="outline"
+                                                size="sm"
+                                            >
+                                                Completar
+                                            </Button>
+                                        )}
+                                        {task.completed && (
+                                            <span className="text-sm font-medium text-success">✓ Completado</span>
+                                        )}
+                                    </Card>
+                                ))}
+                            </div>
+                        ) : (
+                            <Card className="p-8 text-center">
+                                <CheckCircle2 className="h-12 w-12 mx-auto mb-4 text-success" />
+                                <p className="text-text font-medium">¡Excelente! Has completado todas las tareas</p>
+                                <p className="text-sm text-text-muted mt-2">Tu perfil está 100% completo y visible para clientes</p>
                             </Card>
-
-                            <Card className="p-4 flex items-center justify-between hover:shadow-md transition-shadow">
-                                <div className="flex items-center gap-4">
-                                    <div className="h-10 w-10 bg-accent/20 rounded-full flex items-center justify-center">
-                                        <CheckCircle2 className="h-5 w-5 text-accent" />
-                                    </div>
-                                    <div>
-                                        <h3 className="font-medium text-text">Añade tu experiencia profesional</h3>
-                                        <p className="text-sm text-text-muted">Muestra tus proyectos anteriores y experiencia</p>
-                                    </div>
-                                </div>
-                                <Button variant="outline" size="sm">Completar</Button>
-                            </Card>
-
-                            <Card className="p-4 flex items-center justify-between hover:shadow-md transition-shadow">
-                                <div className="flex items-center gap-4">
-                                    <div className="h-10 w-10 bg-accent/20 rounded-full flex items-center justify-center">
-                                        <CheckCircle2 className="h-5 w-5 text-accent" />
-                                    </div>
-                                    <div>
-                                        <h3 className="font-medium text-text">Verifica tu identidad</h3>
-                                        <p className="text-sm text-text-muted">Aumenta la confianza de los clientes</p>
-                                    </div>
-                                </div>
-                                <Button variant="outline" size="sm">Completar</Button>
-                            </Card>
-                        </div>
+                        )}
                     </div>
 
                     {/* Calendar Section */}

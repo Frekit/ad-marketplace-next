@@ -225,8 +225,8 @@ export default function ProposalDetailsPage({ params }: { params: Promise<{ id: 
                 return
             }
 
-            // Redirect to conversation
-            router.push(`/conversations/${data.conversation_id}`)
+            // Redirect to messages
+            router.push('/freelancer/messages')
         } catch (error) {
             console.error('Error negotiating:', error)
             setError("Error al iniciar negociación")
@@ -338,14 +338,14 @@ export default function ProposalDetailsPage({ params }: { params: Promise<{ id: 
                                 </div>
                                 <Badge className={
                                     proposalStatus === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-                                    proposalStatus === 'negotiating' ? 'bg-blue-100 text-blue-700' :
-                                    proposalStatus === 'accepted' ? 'bg-green-100 text-green-700' :
-                                    'bg-red-100 text-red-700'
+                                        proposalStatus === 'negotiating' ? 'bg-blue-100 text-blue-700' :
+                                            proposalStatus === 'accepted' ? 'bg-green-100 text-green-700' :
+                                                'bg-red-100 text-red-700'
                                 }>
                                     {proposalStatus === 'pending' ? 'Pendiente' :
-                                     proposalStatus === 'negotiating' ? 'Negociando' :
-                                     proposalStatus === 'accepted' ? 'Aceptada' :
-                                     'Rechazada'}
+                                        proposalStatus === 'negotiating' ? 'Negociando' :
+                                            proposalStatus === 'accepted' ? 'Aceptada' :
+                                                'Rechazada'}
                                 </Badge>
                             </div>
                         </CardHeader>
@@ -428,11 +428,10 @@ export default function ProposalDetailsPage({ params }: { params: Promise<{ id: 
                                         </div>
                                         <div className="border-t border-border pt-3 flex justify-between items-center">
                                             <span className="text-text font-semibold">Diferencia:</span>
-                                            <span className={`font-bold text-lg ${
-                                                proposal.proposal.price_difference_percent !== null && proposal.proposal.price_difference_percent >= 0
+                                            <span className={`font-bold text-lg ${proposal.proposal.price_difference_percent !== null && proposal.proposal.price_difference_percent >= 0
                                                     ? 'text-success'
                                                     : 'text-danger'
-                                            }`}>
+                                                }`}>
                                                 {proposal.proposal.price_difference_percent !== null && proposal.proposal.price_difference_percent >= 0 ? '+' : ''}
                                                 {proposal.proposal.price_difference_percent?.toFixed(1)}%
                                             </span>
@@ -508,9 +507,9 @@ export default function ProposalDetailsPage({ params }: { params: Promise<{ id: 
                                 <p className="text-orange-800 mb-4">
                                     Estado actual: <span className="font-semibold">
                                         {proposal.verification_status === 'pending' ? 'No iniciado' :
-                                         proposal.verification_status === 'submitted' ? 'En revisión' :
-                                         proposal.verification_status === 'rejected' ? 'Rechazado' :
-                                         'Desconocido'}
+                                            proposal.verification_status === 'submitted' ? 'En revisión' :
+                                                proposal.verification_status === 'rejected' ? 'Rechazado' :
+                                                    'Desconocido'}
                                     </span>
                                 </p>
                                 <Link href="/freelancer/verification" className="inline-block">
