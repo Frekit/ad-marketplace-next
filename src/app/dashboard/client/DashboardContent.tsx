@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Wallet, Plus, Briefcase, Clock, TrendingUp, ArrowRight, LogOut, FileText, CheckCircle, XCircle, AlertCircle, Search, Bell, MessageSquare, Star } from "lucide-react";
+import { Wallet, Plus, Briefcase, Clock, TrendingUp, ArrowRight, LogOut, FileText, CheckCircle, XCircle, AlertCircle, Search, Bell, MessageSquare, Star, RotateCw } from "lucide-react";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -56,6 +56,7 @@ export default function DashboardContent({ balance, transactions, user }: Dashbo
     const [freelancers, setFreelancers] = useState<RecommendedFreelancer[]>([]);
     const [loadingProjects, setLoadingProjects] = useState(true);
     const [loadingFreelancers, setLoadingFreelancers] = useState(true);
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
     useEffect(() => {
         const fetchProjects = async () => {
@@ -89,6 +90,33 @@ export default function DashboardContent({ balance, transactions, user }: Dashbo
         fetchProjects();
         fetchFreelancers();
     }, []);
+
+    const handleRefresh = async () => {
+        setIsRefreshing(true);
+        try {
+            await Promise.all([
+                (async () => {
+                    const res = await fetch("/api/client/projects/active");
+                    if (res.ok) {
+                        const data = await res.json();
+                        setProjects(data.projects || []);
+                    }
+                })(),
+                (async () => {
+                    const res = await fetch("/api/client/freelancers/recommended");
+                    if (res.ok) {
+                        const data = await res.json();
+                        setFreelancers(data.freelancers || []);
+                    }
+                })()
+            ]);
+        } catch (error) {
+            console.error("Error refreshing dashboard:", error);
+        } finally {
+            setIsRefreshing(false);
+        }
+    };
+
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString("en-US", {
             day: "numeric",
@@ -105,12 +133,23 @@ export default function DashboardContent({ balance, transactions, user }: Dashbo
                         <h2 className="text-3xl font-bold tracking-tight text-text">Welcome back, {user.name?.split(' ')[0] || "Client"}</h2>
                         <p className="text-text-muted mt-1">Here's what's happening with your projects today.</p>
                     </div>
-                    <Link href="/projects/new">
-                        <Button size="lg" className="shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all">
-                            <Plus className="h-5 w-5 mr-2" />
-                            Create New Project
+                    <div className="flex gap-3">
+                        <Button
+                            onClick={handleRefresh}
+                            disabled={isRefreshing}
+                            variant="outline"
+                            className="gap-2"
+                        >
+                            <RotateCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                            {isRefreshing ? 'Refreshing...' : 'Refresh'}
                         </Button>
-                    </Link>
+                        <Link href="/projects/new">
+                            <Button size="lg" className="shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all">
+                                <Plus className="h-5 w-5 mr-2" />
+                                Create New Project
+                            </Button>
+                        </Link>
+                    </div>
                 </div>
 
                 <div className="grid gap-8 lg:grid-cols-3">
