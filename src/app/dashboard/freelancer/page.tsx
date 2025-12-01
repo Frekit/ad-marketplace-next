@@ -3,7 +3,7 @@
 import FreelancerLayout from "@/components/layouts/FreelancerLayout"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { CheckCircle2, AlertCircle, Calendar, TrendingUp, Users, MessageSquare, Briefcase, Clock, ArrowRight, ArrowUpRight, ArrowDownRight } from "lucide-react"
+import { CheckCircle2, AlertCircle, Calendar, TrendingUp, Users, MessageSquare, Briefcase, Clock, ArrowRight, ArrowUpRight, ArrowDownRight, RotateCw } from "lucide-react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
@@ -65,7 +65,78 @@ export default function FreelancerDashboard() {
     const [loadingProposals, setLoadingProposals] = useState(true)
     const [loadingTasks, setLoadingTasks] = useState(true)
     const [loadingMilestones, setLoadingMilestones] = useState(true)
+    const [isRefreshing, setIsRefreshing] = useState(false)
     const userName = session?.user?.name || "Freelancer"
+
+    const handleRefresh = async () => {
+        setIsRefreshing(true)
+        try {
+            await Promise.all([
+                (async () => {
+                    const res = await fetch("/api/freelancer/profile/completion")
+                    if (res.ok) {
+                        const data = await res.json()
+                        setStats(prev => prev ? {
+                            ...prev,
+                            profileCompletion: data.completionPercentage || 0,
+                            missingFields: data.missingFields || []
+                        } : null)
+                    }
+                })(),
+                (async () => {
+                    const res = await fetch("/api/freelancer/stats/profile-views")
+                    if (res.ok) {
+                        const data = await res.json()
+                        setStats(prev => prev ? {
+                            ...prev,
+                            profileViews: data.stats?.totalViews || 0,
+                            viewTrend: data.stats?.trend || 0,
+                            viewTrendDirection: data.stats?.trendDirection || 'stable'
+                        } : null)
+                    }
+                })(),
+                (async () => {
+                    const res = await fetch("/api/freelancer/proposals")
+                    if (res.ok) {
+                        const data = await res.json()
+                        setProposals(data.proposals || [])
+                        setStats(prev => prev ? {
+                            ...prev,
+                            proposalsReceived: (data.proposals || []).length
+                        } : null)
+                    }
+                })(),
+                (async () => {
+                    const res = await fetch("/api/freelancer/onboarding/tasks")
+                    if (res.ok) {
+                        const data = await res.json()
+                        setTasks(data.tasks || [])
+                    }
+                })(),
+                (async () => {
+                    const res = await fetch("/api/freelancer/calendar/upcoming")
+                    if (res.ok) {
+                        const data = await res.json()
+                        setMilestones(data.milestones || [])
+                    }
+                })(),
+                (async () => {
+                    const res = await fetch("/api/freelancer/projects/active")
+                    if (res.ok) {
+                        const data = await res.json()
+                        setStats(prev => prev ? {
+                            ...prev,
+                            activeProjects: data.count || 0
+                        } : null)
+                    }
+                })()
+            ])
+        } catch (error) {
+            console.error("Error refreshing dashboard:", error)
+        } finally {
+            setIsRefreshing(false)
+        }
+    }
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -168,10 +239,28 @@ export default function FreelancerDashboard() {
             }
         }
 
+        const fetchActiveProjects = async () => {
+            try {
+                const res = await fetch("/api/freelancer/projects/active")
+                if (res.ok) {
+                    const data = await res.json()
+                    const projectCount = data.count || 0
+                    // Update stats with actual active projects count
+                    setStats((prevStats) => prevStats ? ({
+                        ...prevStats,
+                        activeProjects: projectCount,
+                    }) : null)
+                }
+            } catch (error) {
+                console.error("Error fetching active projects:", error)
+            }
+        }
+
         fetchStats()
         fetchProposals()
         fetchTasks()
         fetchMilestones()
+        fetchActiveProjects()
     }, [])
 
     const profileCompletion = stats?.profileCompletion || 0
@@ -207,12 +296,23 @@ export default function FreelancerDashboard() {
                             <h1 className="text-3xl font-bold text-text">Bienvenido de nuevo {userName}</h1>
                             <p className="text-text-muted mt-1">Aquí está un resumen de tu actividad reciente</p>
                         </div>
-                        <Button
-                            onClick={() => window.location.href = '/freelancer/profile-settings'}
-                            className="bg-primary hover:bg-primary/90 text-white"
-                        >
-                            Completar mi perfil
-                        </Button>
+                        <div className="flex gap-3">
+                            <Button
+                                onClick={handleRefresh}
+                                disabled={isRefreshing}
+                                variant="outline"
+                                className="gap-2"
+                            >
+                                <RotateCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                                {isRefreshing ? 'Actualizando...' : 'Actualizar'}
+                            </Button>
+                            <Button
+                                onClick={() => window.location.href = '/freelancer/profile-settings'}
+                                className="bg-primary hover:bg-primary/90 text-white"
+                            >
+                                Completar mi perfil
+                            </Button>
+                        </div>
                     </div>
 
                     {/* Stats Cards */}
